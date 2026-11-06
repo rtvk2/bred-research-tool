@@ -33,7 +33,7 @@ window.CFG = {
 
   // Where data go. "" = the Python server in this repo (api/assign, api/save, same origin).
   // For GitHub Pages (static, cannot store data) paste the Apps Script web-app URL here (ends in /exec); see backend/README.md.
-  backend: "",
+  backend: "https://script.google.com/macros/s/AKfycbxZrojjHFhpeI0y0BfhuRjf4JTkOjF6slVM_MINDa5yvjiKlvC_50VscMQNWmb57Sy1/exec",
   endpoints: { assign: "api/assign", save: "api/save" },
 
   // ---- participant-facing wording (instrument text; consent and debrief are in content/*.html) ----
