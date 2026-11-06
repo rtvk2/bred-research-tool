@@ -1,0 +1,15 @@
+/* jsPsych page: make the standard plugin output look like the rest of the study */
+body { background: var(--bg); color: var(--ink); }
+.jspsych-display-element { background: transparent; color: var(--ink); font-family: inherit; }
+.jspsych-content-wrapper { display: block; }
+.jspsych-content { max-width: 100%; width: 100%; text-align: left; font-size: inherit; line-height: inherit; }
+.jspsych-btn { font: inherit; padding: 10px 20px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent); color: var(--accent-ink); cursor: pointer; margin: 6px; }
+.jspsych-btn:hover { filter: brightness(1.08); }
+.hintbox { display: inline-block; min-width: 150px; padding: 14px 22px; border: 1px solid var(--line); border-radius: 8px; font-size: 20px; background: var(--card); }
+.hintbox kbd { font: 13px ui-monospace, Consolas, monospace; margin-left: 8px; padding: 1px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); }
+form#jspsych-survey-html-form { text-align: left; }
+.card .jspsych-btn { margin-left: 0; }
+.jspsych-content .center, .jspsych-content .card { text-align: center; }
+.jspsych-content .card { text-align: left; }
+.jspsych-content .center { text-align: center; }
+#stage:focus { outline: none; }

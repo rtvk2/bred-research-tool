@@ -1,0 +1,6 @@
+data/
+analysis/
+tools/wordlists/
+tools/shots/
+__pycache__/
+*.pyc

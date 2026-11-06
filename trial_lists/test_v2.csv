@@ -1,0 +1,61 @@
+position,word,kind,lexicality,condition,cue_count,cue_valence,cue_text,correct_answer
+1,MEADOW,foilW,word,LN,2,NEW,2 of 10 other participants said NEW,NEW
+2,TURKEY,foilW,word,NC,,,(no cue shown),NEW
+3,HELMET,lure,word,NC,,,(no cue shown),NEW
+4,KIDNEY,foilW,word,LO,2,OLD,2 of 10 other participants said OLD,NEW
+5,NAPKIN,lure,word,HN,9,NEW,9 of 10 other participants said NEW,NEW
+6,CRADLE,lure,word,NC,,,(no cue shown),NEW
+7,TOMATO,foilW,word,HN,9,NEW,9 of 10 other participants said NEW,NEW
+8,WALNOT,oldP,nonword,NC,,,(no cue shown),OLD
+9,BANANA,lure,word,LN,2,NEW,2 of 10 other participants said NEW,NEW
+10,TORATO,foilP,nonword,LN,2,NEW,2 of 10 other participants said NEW,NEW
+11,ERAMEL,foilP,nonword,LN,2,NEW,2 of 10 other participants said NEW,NEW
+12,NEEDLE,oldW,word,HO,9,OLD,9 of 10 other participants said OLD,OLD
+13,BALBOO,oldP,nonword,NC,,,(no cue shown),OLD
+14,PARCEL,foilW,word,HO,9,OLD,9 of 10 other participants said OLD,NEW
+15,TENDON,oldW,word,HN,9,NEW,9 of 10 other participants said NEW,OLD
+16,PILTAR,oldP,nonword,HN,9,NEW,9 of 10 other participants said NEW,OLD
+17,PIGEON,lure,word,NC,,,(no cue shown),NEW
+18,JERSEY,foilW,word,NC,,,(no cue shown),NEW
+19,BANARA,oldP,nonword,HN,9,NEW,9 of 10 other participants said NEW,OLD
+20,NASKIN,oldP,nonword,LO,2,OLD,2 of 10 other participants said OLD,OLD
+21,SPIMER,oldP,nonword,LO,2,OLD,2 of 10 other participants said OLD,OLD
+22,MEAROW,foilP,nonword,NC,,,(no cue shown),NEW
+23,KIDLEY,foilP,nonword,HN,9,NEW,9 of 10 other participants said NEW,NEW
+24,WALNUT,lure,word,HO,9,OLD,9 of 10 other participants said OLD,NEW
+25,GALAXY,lure,word,LN,2,NEW,2 of 10 other participants said NEW,NEW
+26,ENAMEL,foilW,word,HN,9,NEW,9 of 10 other participants said NEW,NEW
+27,MOTAIC,foilP,nonword,NC,,,(no cue shown),NEW
+28,FABLIC,oldP,nonword,LO,2,OLD,2 of 10 other participants said OLD,OLD
+29,JERGEY,foilP,nonword,HO,9,OLD,9 of 10 other participants said OLD,NEW
+30,HOLMET,oldP,nonword,LN,2,NEW,2 of 10 other participants said NEW,OLD
+31,CEDERY,foilP,nonword,HN,9,NEW,9 of 10 other participants said NEW,NEW
+32,GARNIC,oldP,nonword,HO,9,OLD,9 of 10 other participants said OLD,OLD
+33,ANCHOR,oldW,word,HO,9,OLD,9 of 10 other participants said OLD,OLD
+34,DIESEL,foilW,word,HO,9,OLD,9 of 10 other participants said OLD,NEW
+35,FABRIC,lure,word,HN,9,NEW,9 of 10 other participants said NEW,NEW
+36,MOSAIC,foilW,word,LN,2,NEW,2 of 10 other participants said NEW,NEW
+37,TEAPOT,lure,word,LO,2,OLD,2 of 10 other participants said OLD,NEW
+38,OYSTER,oldW,word,HN,9,NEW,9 of 10 other participants said NEW,OLD
+39,DIRSEL,foilP,nonword,LO,2,OLD,2 of 10 other participants said OLD,NEW
+40,PUNCIL,oldP,nonword,HO,9,OLD,9 of 10 other participants said OLD,OLD
+41,SPIDER,lure,word,HN,9,NEW,9 of 10 other participants said NEW,NEW
+42,FOSSIL,oldW,word,LO,2,OLD,2 of 10 other participants said OLD,OLD
+43,VIOLIN,lure,word,HO,9,OLD,9 of 10 other participants said OLD,NEW
+44,PIGERN,oldP,nonword,LN,2,NEW,2 of 10 other participants said NEW,OLD
+45,CRAGLE,oldP,nonword,LN,2,NEW,2 of 10 other participants said NEW,OLD
+46,AMAZON,oldW,word,LN,2,NEW,2 of 10 other participants said NEW,OLD
+47,PARGEL,foilP,nonword,LO,2,OLD,2 of 10 other participants said OLD,NEW
+48,CELERY,foilW,word,LO,2,OLD,2 of 10 other participants said OLD,NEW
+49,TEAPIT,oldP,nonword,HO,9,OLD,9 of 10 other participants said OLD,OLD
+50,GUITAR,oldW,word,LO,2,OLD,2 of 10 other participants said OLD,OLD
+51,VIODIN,oldP,nonword,NC,,,(no cue shown),OLD
+52,COFFIN,oldW,word,NC,,,(no cue shown),OLD
+53,JACKAL,oldW,word,NC,,,(no cue shown),OLD
+54,GARLIC,lure,word,LO,2,OLD,2 of 10 other participants said OLD,NEW
+55,TULKEY,foilP,nonword,HO,9,OLD,9 of 10 other participants said OLD,NEW
+56,SLEEVE,oldW,word,LN,2,NEW,2 of 10 other participants said NEW,OLD
+57,PILLAR,lure,word,LN,2,NEW,2 of 10 other participants said NEW,NEW
+58,PENCIL,lure,word,LO,2,OLD,2 of 10 other participants said OLD,NEW
+59,GANAXY,oldP,nonword,HN,9,NEW,9 of 10 other participants said NEW,OLD
+60,BAMBOO,lure,word,HO,9,OLD,9 of 10 other participants said OLD,NEW
