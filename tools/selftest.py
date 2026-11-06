@@ -158,6 +158,18 @@ def main():
             print(f"bot v={v} k={k} {g}:", res[:120])
             if "trials" not in res:
                 problems.append("bot run failed: " + res)
+        # progress log: a Quit and a closed tab must leave only stage entries, never a participant file
+        n_before = len(list(Path(data).glob("dev_*.json")))
+        for how in ("quit", "close"):
+            cdp.go(f"{BASE}{page}?bot=1&v=1&k=0&seed=555{qs}")
+            time.sleep(2.0)
+            if how == "quit":
+                cdp.ev("(function(){var q=document.querySelector('#quit'); if (q) q.click();})()")
+            else:
+                cdp.go("about:blank")
+            time.sleep(1.5)
+        if len(list(Path(data).glob("dev_*.json"))) != n_before:
+            problems.append("a quit or closed session left a participant file")
         if a.mock:  # one run that takes its cell from the backend
             cdp.go(f"{BASE}{page}?bot=1&seed=77{qs}")
             res = cdp.wait("window.__done ? JSON.stringify(window.__result) : (window.__error || '')")
@@ -209,6 +221,22 @@ def main():
         print("each lure seen under all 5 conditions across the 5 versions:", full)
         if not full:
             problems.append("rotation incomplete")
+        pj = Path(data) / "progress.jsonl"
+        ev = [json.loads(x) for x in pj.read_text(encoding="utf8").splitlines() if x.strip()] if pj.exists() else []
+        lastev = {}
+        for e in sorted(ev, key=lambda e: (e["sid"], e["seq"])):
+            lastev[e["sid"]] = e
+        ends = collections.Counter(e["stage"] for e in lastev.values())
+        print("progress log, sessions by last entry:", dict(ends))
+        if ends["complete"] != len(devs):
+            problems.append(f"progress log shows {ends['complete']} complete sessions but {len(devs)} files were saved")
+        if ends["quit"] < 1:
+            problems.append("no quit entry in the progress log")
+        if ends["closed"] < 1:
+            problems.append("no closed-tab entry in the progress log")
+        allowed = {"sid", "seq", "stage", "n", "dev", "group", "version", "keymap", "t", "last"}
+        if any(set(e) - allowed for e in ev):
+            problems.append("progress log carries unexpected fields")
         print("--- summarise.py --include-dev ---")
         print(subprocess.run([sys.executable, str(APP / "tools" / "summarise.py"), "--data", data, "--out", data, "--include-dev"], capture_output=True, text=True).stdout)
     finally:

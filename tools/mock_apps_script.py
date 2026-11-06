@@ -52,6 +52,10 @@ class H(BaseHTTPRequestHandler):
             d = json.loads(self.rfile.read(n).decode("utf8"))
         except Exception:
             return self._send({"ok": False, "error": "bad json"})
+        if d.get("type") == "progress":
+            with open(DATA / "progress.jsonl", "a", encoding="utf8") as fh:
+                fh.write(json.dumps({k: d.get(k) for k in ("sid", "seq", "stage", "n", "dev", "group", "version", "keymap", "t", "last")}) + "\n")
+            return self._send({"ok": True})
         if d.get("schema") != 1 or not d.get("trials") or not (d.get("consent") or {}).get("agreed"):
             return self._send({"ok": False, "error": "bad schema"})
         p = DATA / (("dev_" if d.get("devMode") else "") + d["participantCode"] + ".json")

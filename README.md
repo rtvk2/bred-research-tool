@@ -46,14 +46,14 @@ git push -u origin main
 Real data never go into the repo (`data/` is git-ignored). Do not change files during data collection (Pages caches for a few minutes).
 
 ## Before real participants (the app refuses to run until you do the first two)
-1. Write `docs/content/consent.html` from your own approved consent form (the placeholder lists what it must cover).
-2. Write `docs/content/debrief.html` (keep `{{CODE}}`).
+1. `docs/content/consent.html` is drafted from your submitted consent form and updated to the final procedure. Resolve its 3 yellow `[CONFIRM]` notes (compensation, open data sharing), then delete the marker comment on its first line.
+2. `docs/content/debrief.html` is written (keep `{{CODE}}`); read it once and edit anything that does not fit.
 3. Stimuli: already built from the paper (`tools/pairs.csv` lists the 15 lure pairs; rebuild with `python tools/build_stimuli.py`, no internet needed). Read the printed list.
 4. Run the automated checks (Chrome and `pip install websocket-client`): `python tools/selftest.py`, `python tools/selftest.py --engine jspsych`, and with `--mock` for the GitHub-Pages path. Each plays 8 bot sessions (7 cue-version, 1 optional control) through headless Chrome and checks the saved data against the design (60 trials, five word kinds, balanced cells, rotation across 5 versions).
 5. Pilot with a few people, check timing and false-recognition rates, then freeze `config.js` and `stimuli.json`.
 
 ## Data
-One JSON file per completed participant (`WM-XXXXXXXX.json`; `dev_*` = test). Nothing is saved if a participant quits. Put the files in `data/` (from the Drive folder, or written there by `server.py`), back them up, then:
+One JSON file per completed participant (`WM-XXXXXXXX.json`; `dev_*` = test). Nothing from the task is saved if a participant quits. A separate anonymous stage-only log (`progress.jsonl`, or the `progress` tab of the Apps Script sheet; no answers, timings or identity) records how far each session got, including Quit and closed tabs, and `summarise.py` reports where people dropped out (for the Apps Script tab, export it as `data/progress.csv`). Put the files in `data/` (from the Drive folder, or written there by `server.py`), back them up, then:
 ```
 python tools/summarise.py        # writes analysis/trials.csv and participants.csv, prints the cell table
 ```

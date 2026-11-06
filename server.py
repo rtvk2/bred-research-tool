@@ -22,6 +22,8 @@ PENDING_TTL = 45 * 60
 MAX_BODY = 1_000_000
 CONTROL_ENABLED = False          # the no-cue baseline is within each person; a between-participants control group is not used
 CODE_RE = re.compile(r"^[A-Z0-9-]{6,24}$")
+SID_RE = re.compile(r"^[a-z0-9]{8,24}$")
+STAGES = {"consent", "instructions", "practice", "study", "distractor", "test", "questions", "saving", "complete", "downloaded", "quit", "closed"}
 DATA = ROOT / "data"
 
 
@@ -54,6 +56,17 @@ def assign():
         ticket = secrets.token_hex(8)
         PENDING[ticket] = (group, v, k, time.time())
         return {"group": group, "version": v, "keymap": k, "ticket": ticket}
+
+
+def log_progress(d, size):
+    """Anonymous stage-only entries (no answers, no timings, no identity): one line per ping in progress.jsonl."""
+    if size > 2000 or not isinstance(d.get("sid"), str) or not SID_RE.match(d["sid"]) or d.get("stage") not in STAGES:
+        return False
+    keep = {k: d.get(k) for k in ("sid", "seq", "stage", "n", "dev", "group", "version", "keymap", "t", "last")}
+    with LOCK:
+        with open(DATA / "progress.jsonl", "a", encoding="utf8") as fh:
+            fh.write(json.dumps(keep) + "\n")
+    return True
 
 
 def validate(d):
@@ -135,6 +148,9 @@ class Handler(SimpleHTTPRequestHandler):
             d = json.loads(self.rfile.read(n).decode("utf8"))
         except Exception:
             return self._json(400, {"ok": False, "error": "bad json"})
+        if isinstance(d, dict) and d.get("type") == "progress":
+            ok = log_progress(d, n)
+            return self._json(200 if ok else 400, {"ok": ok})
         code, obj = save(d)
         self._json(code, obj)
 

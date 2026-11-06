@@ -142,5 +142,24 @@ window.WM = (() => {
   function guardUnload(isActive, dev) {
     window.addEventListener("beforeunload", (e) => { if (!dev && isActive()) { e.preventDefault(); e.returnValue = ""; } });
   }
-  return { guardUnload, goNoGoList, debriefFor, KINDS, IS_OLD, LEX, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode, COND, CI, mulberry32, shuffle, buildPlan, buildPractice, FIELDS: { open: F_OPEN, check: F_CHECK, lang: F_LANG, demo: F_DEMO } };
+  // Anonymous stage-only progress log: no answers, no timings, no identity. It only records how far a session got, so the
+  // researchers can report where people drop out. Sent as a "simple" cross-origin request (text/plain), by sendBeacon so it
+  // also leaves when the tab is closed.
+  function progressLogger(url, meta, dev) {
+    const al = "abcdefghijkmnpqrstuvwxyz23456789", a = new Uint8Array(12); crypto.getRandomValues(a);
+    const sid = [...a].map((x) => al[x % al.length]).join("");
+    let seq = 0, last = "start";
+    const send = (stage, n, extra) => {
+      const body = JSON.stringify(Object.assign({ schema: 1, type: "progress", sid, seq: ++seq, stage, n: n == null ? null : n, dev: !!dev,
+        group: meta.group, version: meta.version, keymap: meta.keymap, t: Date.now() }, extra || {}));
+      try {
+        if (navigator.sendBeacon) navigator.sendBeacon(url, new Blob([body], { type: "text/plain;charset=UTF-8" }));
+        else fetch(url, { method: "POST", headers: { "Content-Type": "text/plain;charset=UTF-8" }, body, keepalive: true });
+      } catch (e) { /* the log is optional */ }
+    };
+    const log = (stage, n) => { last = n == null ? stage : stage + ":" + n; send(stage, n); };
+    log.closed = () => send("closed", null, { last });
+    return log;
+  }
+  return { progressLogger, guardUnload, goNoGoList, debriefFor, KINDS, IS_OLD, LEX, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode, COND, CI, mulberry32, shuffle, buildPlan, buildPractice, FIELDS: { open: F_OPEN, check: F_CHECK, lang: F_LANG, demo: F_DEMO } };
 })();

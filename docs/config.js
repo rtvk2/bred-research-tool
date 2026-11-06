@@ -61,7 +61,7 @@ window.CFG = {
     quitConfirm: "Quit the study? Nothing you have done so far will be saved.",
     quitDone: `<h2>You have left the study</h2><p>No data were saved. You can close this tab.</p>`,
     alreadyDone: `<h2>Thank you</h2><p>This browser has already completed the study, so it cannot be done twice.</p>`,
-    noConsentText: `<h2>This study cannot start yet</h2><p>The consent text has not been added by the researchers (content/consent.html is still the placeholder). No data can be collected.</p>`,
+    noConsentText: `<h2>This study cannot start yet</h2><p>The consent page still has open notes for the researchers (content/consent.html). No data can be collected yet.</p>`,
   },
 
   languages: ["English", "Hindi", "Telugu", "Tamil", "Kannada", "Malayalam", "Marathi", "Bengali", "Gujarati", "Urdu", "Odia", "Punjabi", "Other"],

@@ -58,3 +58,5 @@ textarea { min-height: 84px; resize: vertical; }
 @media (max-width: 560px) { .word { font-size: 38px; } .card { padding: 18px 16px; } .answers { flex-direction: column; width: 100%; } .answers button { width: 100%; } }
 .shape { width: 90px; height: 90px; background: var(--ink); }
 .shape.circle { border-radius: 50%; }
+mark.todo { background: #fff2a8; color: #3a2f00; padding: 1px 5px; border-radius: 3px; font-size: 14px; }
+@media (prefers-color-scheme: dark) { mark.todo { background: #5a4b00; color: #ffe9a0; } }
