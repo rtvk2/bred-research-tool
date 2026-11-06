@@ -76,11 +76,14 @@ def check_file(d, problems):
     for x, y in zip(tr, tr[1:]):
         run = run + 1 if x["status"] == y["status"] else 1
         c(run <= 3, "status run > 3")
-    exp = {"HO": (9, "OLD"), "LO": (2, "OLD"), "HN": (9, "NEW"), "LN": (2, "NEW"), "NC": (None, None)}
-    c(all((t["cueCount"], t["cueValence"]) == exp[t["condition"]] for t in tr), "cue/condition mismatch")
+    exp = {"HO": ({8, 9, 10}, "OLD"), "LO": ({1, 2, 3}, "OLD"), "HN": ({8, 9, 10}, "NEW"), "LN": ({1, 2, 3}, "NEW"), "NC": ({None}, None)}
+    c(all(t["cueCount"] in exp[t["condition"]][0] and t["cueValence"] == exp[t["condition"]][1] for t in tr), "cue/condition mismatch")
     if group == "cue":
         cells = collections.Counter((t["status"], t["condition"]) for t in tr)
         c(all(cells[(k, cd)] == SIZE[k] // 5 for k in SIZE for cd in CONDS), "cells not balanced (3 or 2 per kind and condition)")
+        for cd in ("HO", "LO", "HN", "LN"):
+            nums = collections.Counter(t["cueCount"] for t in tr if t["condition"] == cd)
+            c(sorted(nums.values()) == [4, 4, 4], f"cue numbers not balanced within {cd}: {dict(nums)}")
         c(len(d["catches"]) == 3, "catches")
         by_trial = {t["trial"]: t for t in tr}
         c(all(by_trial[x["afterTrial"]]["cueCount"] is not None for x in d["catches"]), "a check followed a no-cue trial")
@@ -114,7 +117,7 @@ def main():
     problems = []
     page = "/jspsych/index.html" if a.engine == "jspsych" else "/"
     mock = None
-    qs = ""
+    qs = "&backend=local"          # tests must never post to the live data inbox set in config.js
     if a.mock:
         data = tempfile.mkdtemp(prefix="wm_mock_")
         mock = subprocess.Popen([sys.executable, str(APP / "tools" / "mock_apps_script.py"), "--port", "8777", "--data", data], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -179,7 +182,7 @@ def main():
         if a.shots:
             shots = APP / "tools" / "shots"
             shots.mkdir(exist_ok=True)
-            cdp.go(f"{BASE}/?dev=1&v=0&k=0")
+            cdp.go(f"{BASE}/?dev=1&v=0&k=0&backend=local")
             cdp.wait("document.querySelector('#agree') ? 1 : 0")
             cdp.shot(shots / "1_consent.png")
             cdp.ev("document.querySelector('#agree').click(); document.querySelector('[data-next]').click()")

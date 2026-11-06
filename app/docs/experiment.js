@@ -9,7 +9,8 @@
   const BOT = Q.has("bot"), DEV = BOT || Q.has("dev"), TS = BOT || Q.has("fast") ? 0.02 : 1;
   // Data backend: "" = the Python server in this repo (same origin); otherwise a Google Apps Script web-app URL (see backend/).
   // ?backend=<url> overrides it in test mode only.
-  const BACKEND = (DEV && Q.get("backend")) || CFG.backend || "";
+  const BO = DEV ? Q.get("backend") : null;   // test mode only: ?backend=<url> overrides, ?backend=local keeps data on this server
+  const BACKEND = BO === "local" ? "" : (BO || CFG.backend || "");
   const { COND, CI, mulberry32, shuffle, buildPlan, buildPractice, goNoGoList, debriefFor, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode } = window.WM;
   const S = { quit: false, finished: false, vis: [] };
   let log = () => {};                // anonymous stage-only progress log, set up after the group/version are known
@@ -312,7 +313,7 @@
       assignment: { group: asg.group, version: asg.version, keymap: asg.keymap, source: asg.source, seed, orderTries: plan.orderTries },
       consent, device: deviceInfo(frameMs),
       timing: { startISO, endISO: new Date().toISOString(), durationMs: Math.round(performance.now() - t00) },
-      design: { cueHigh: CFG.cueHigh, cueLow: CFG.cueLow, crowdN: CFG.crowdN, studyMs: CFG.studyMs, distractorMs: CFG.distractorMs, stimuliSeed: stim.seed, stimuliSource: stim.source },
+      design: { cueHighValues: CFG.cueHighValues, cueLowValues: CFG.cueLowValues, crowdN: CFG.crowdN, studyMs: CFG.studyMs, distractorMs: CFG.distractorMs, stimuliSeed: stim.seed, stimuliSource: stim.source },
       study: { order: plan.studyOrder, kinds: plan.studyKinds, log: studyLog }, distractor: distr, practice, trials, catches,
       attention: { catchCorrect: catches.filter((c) => c.correct).length, catchTotal: catches.length },
       visibility: S.vis, questionnaire: q,
