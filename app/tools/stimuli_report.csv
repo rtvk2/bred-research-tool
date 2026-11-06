@@ -1,0 +1,61 @@
+role,id,word,category,sim_to_studied,freq_rank
+studied pseudoword,0,BANARA,natural,1,
+lure,0,BANANA,natural,0.7,9295
+studied pseudoword,1,PIGERN,natural,1,
+lure,1,PIGEON,natural,0.615,
+studied pseudoword,2,WALNOT,natural,1,
+lure,2,WALNUT,natural,0.615,9355
+studied pseudoword,3,GARNIC,natural,1,
+lure,3,GARLIC,natural,0.615,8950
+studied pseudoword,4,SPIMER,natural,1,
+lure,4,SPIDER,natural,0.615,6384
+studied pseudoword,5,GANAXY,natural,1,
+lure,5,GALAXY,natural,0.615,7730
+studied pseudoword,6,HOLMET,artefact,1,
+lure,6,HELMET,artefact,0.615,8693
+studied pseudoword,7,VIODIN,artefact,1,
+lure,7,VIOLIN,artefact,0.615,9551
+studied pseudoword,8,PUNCIL,artefact,1,
+lure,8,PENCIL,artefact,0.615,9339
+studied pseudoword,9,NASKIN,artefact,1,
+lure,9,NAPKIN,artefact,0.615,
+studied pseudoword,10,PILTAR,artefact,1,
+lure,10,PILLAR,artefact,0.615,
+studied pseudoword,11,CRAGLE,artefact,1,
+lure,11,CRADLE,artefact,0.615,9746
+studied pseudoword,12,BALBOO,natural,1,
+lure,12,BAMBOO,natural,0.615,
+studied pseudoword,13,TEAPIT,artefact,1,
+lure,13,TEAPOT,artefact,0.615,
+studied pseudoword,14,FABLIC,artefact,1,
+lure,14,FABRIC,artefact,0.615,3943
+studied real word,0,JACKAL,natural,,
+studied real word,1,ANCHOR,artefact,,6824
+studied real word,2,FOSSIL,natural,,9592
+studied real word,3,OYSTER,natural,,
+studied real word,4,AMAZON,natural,,1387
+studied real word,5,COFFIN,artefact,,
+studied real word,6,NEEDLE,artefact,,9131
+studied real word,7,GUITAR,artefact,,2157
+studied real word,8,TENDON,natural,,
+studied real word,9,SLEEVE,artefact,,5523
+foil real word,0,TURKEY,natural,0.077,2794
+foil pseudoword,0,TULKEY,natural,0.077,
+foil real word,1,PARCEL,artefact,0.154,8588
+foil pseudoword,1,PARGEL,artefact,0.154,
+foil real word,2,CELERY,natural,0.154,
+foil pseudoword,2,CEDERY,natural,0.077,
+foil real word,3,ENAMEL,artefact,0.077,
+foil pseudoword,3,ERAMEL,artefact,0.154,
+foil real word,4,MEADOW,natural,0.077,
+foil pseudoword,4,MEAROW,natural,0.077,
+foil real word,5,JERSEY,artefact,0.077,1678
+foil pseudoword,5,JERGEY,artefact,0.154,
+foil real word,6,DIESEL,artefact,0.077,4984
+foil pseudoword,6,DIRSEL,artefact,0.077,
+foil real word,7,KIDNEY,natural,0.077,7541
+foil pseudoword,7,KIDLEY,natural,0.231,
+foil real word,8,TOMATO,natural,0.072,9222
+foil pseudoword,8,TORATO,natural,0.072,
+foil real word,9,MOSAIC,artefact,0.231,
+foil pseudoword,9,MOTAIC,artefact,0.231,

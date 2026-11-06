@@ -1,0 +1,312 @@
+{
+ "builtWith": "tools/build_stimuli.py",
+ "seed": 20261105,
+ "source": "All words from the Appendix of Bowers, Davis & Hanley (2005), Cognition 97, B45-B54 (39 usable pairs; roles assigned by seeded rule search)",
+ "similarity": "cosine of letter 2- and 3-gram profiles with word-boundary markers",
+ "items": [
+  {
+   "id": 0,
+   "pseudo": "BANARA",
+   "real": "BANANA",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.7,
+   "rank": 9295
+  },
+  {
+   "id": 1,
+   "pseudo": "PIGERN",
+   "real": "PIGEON",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": null
+  },
+  {
+   "id": 2,
+   "pseudo": "WALNOT",
+   "real": "WALNUT",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 9355
+  },
+  {
+   "id": 3,
+   "pseudo": "GARNIC",
+   "real": "GARLIC",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 8950
+  },
+  {
+   "id": 4,
+   "pseudo": "SPIMER",
+   "real": "SPIDER",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 6384
+  },
+  {
+   "id": 5,
+   "pseudo": "GANAXY",
+   "real": "GALAXY",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 7730
+  },
+  {
+   "id": 6,
+   "pseudo": "HOLMET",
+   "real": "HELMET",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 8693
+  },
+  {
+   "id": 7,
+   "pseudo": "VIODIN",
+   "real": "VIOLIN",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 9551
+  },
+  {
+   "id": 8,
+   "pseudo": "PUNCIL",
+   "real": "PENCIL",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 9339
+  },
+  {
+   "id": 9,
+   "pseudo": "NASKIN",
+   "real": "NAPKIN",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": null
+  },
+  {
+   "id": 10,
+   "pseudo": "PILTAR",
+   "real": "PILLAR",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": null
+  },
+  {
+   "id": 11,
+   "pseudo": "CRAGLE",
+   "real": "CRADLE",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 9746
+  },
+  {
+   "id": 12,
+   "pseudo": "BALBOO",
+   "real": "BAMBOO",
+   "cat": "natural",
+   "len": 6,
+   "sim": 0.615,
+   "rank": null
+  },
+  {
+   "id": 13,
+   "pseudo": "TEAPIT",
+   "real": "TEAPOT",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": null
+  },
+  {
+   "id": 14,
+   "pseudo": "FABLIC",
+   "real": "FABRIC",
+   "cat": "artefact",
+   "len": 6,
+   "sim": 0.615,
+   "rank": 3943
+  }
+ ],
+ "studyReals": [
+  {
+   "id": 0,
+   "word": "JACKAL",
+   "cat": "natural",
+   "rank": null
+  },
+  {
+   "id": 1,
+   "word": "ANCHOR",
+   "cat": "artefact",
+   "rank": 6824
+  },
+  {
+   "id": 2,
+   "word": "FOSSIL",
+   "cat": "natural",
+   "rank": 9592
+  },
+  {
+   "id": 3,
+   "word": "OYSTER",
+   "cat": "natural",
+   "rank": null
+  },
+  {
+   "id": 4,
+   "word": "AMAZON",
+   "cat": "natural",
+   "rank": 1387
+  },
+  {
+   "id": 5,
+   "word": "COFFIN",
+   "cat": "artefact",
+   "rank": null
+  },
+  {
+   "id": 6,
+   "word": "NEEDLE",
+   "cat": "artefact",
+   "rank": 9131
+  },
+  {
+   "id": 7,
+   "word": "GUITAR",
+   "cat": "artefact",
+   "rank": 2157
+  },
+  {
+   "id": 8,
+   "word": "TENDON",
+   "cat": "natural",
+   "rank": null
+  },
+  {
+   "id": 9,
+   "word": "SLEEVE",
+   "cat": "artefact",
+   "rank": 5523
+  }
+ ],
+ "foils": [
+  {
+   "id": 0,
+   "real": "TURKEY",
+   "pseudo": "TULKEY",
+   "cat": "natural",
+   "simReal": 0.077,
+   "simPseudo": 0.077,
+   "rank": 2794
+  },
+  {
+   "id": 1,
+   "real": "PARCEL",
+   "pseudo": "PARGEL",
+   "cat": "artefact",
+   "simReal": 0.154,
+   "simPseudo": 0.154,
+   "rank": 8588
+  },
+  {
+   "id": 2,
+   "real": "CELERY",
+   "pseudo": "CEDERY",
+   "cat": "natural",
+   "simReal": 0.154,
+   "simPseudo": 0.077,
+   "rank": null
+  },
+  {
+   "id": 3,
+   "real": "ENAMEL",
+   "pseudo": "ERAMEL",
+   "cat": "artefact",
+   "simReal": 0.077,
+   "simPseudo": 0.154,
+   "rank": null
+  },
+  {
+   "id": 4,
+   "real": "MEADOW",
+   "pseudo": "MEAROW",
+   "cat": "natural",
+   "simReal": 0.077,
+   "simPseudo": 0.077,
+   "rank": null
+  },
+  {
+   "id": 5,
+   "real": "JERSEY",
+   "pseudo": "JERGEY",
+   "cat": "artefact",
+   "simReal": 0.077,
+   "simPseudo": 0.154,
+   "rank": 1678
+  },
+  {
+   "id": 6,
+   "real": "DIESEL",
+   "pseudo": "DIRSEL",
+   "cat": "artefact",
+   "simReal": 0.077,
+   "simPseudo": 0.077,
+   "rank": 4984
+  },
+  {
+   "id": 7,
+   "real": "KIDNEY",
+   "pseudo": "KIDLEY",
+   "cat": "natural",
+   "simReal": 0.077,
+   "simPseudo": 0.231,
+   "rank": 7541
+  },
+  {
+   "id": 8,
+   "real": "TOMATO",
+   "pseudo": "TORATO",
+   "cat": "natural",
+   "simReal": 0.072,
+   "simPseudo": 0.072,
+   "rank": 9222
+  },
+  {
+   "id": 9,
+   "real": "MOSAIC",
+   "pseudo": "MOTAIC",
+   "cat": "artefact",
+   "simReal": 0.231,
+   "simPseudo": 0.231,
+   "rank": null
+  }
+ ],
+ "practice": {
+  "study": [
+   "TALMAC",
+   "TARTOO",
+   "BRETLE"
+  ],
+  "old": [
+   "TALMAC",
+   "TARTOO"
+  ],
+  "new": [
+   "TARMAC",
+   "BEETLE"
+  ]
+ }
+}
