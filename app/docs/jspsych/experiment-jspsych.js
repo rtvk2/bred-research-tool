@@ -13,7 +13,9 @@
   const stage = $("#stage");
   stage.tabIndex = -1;
   const S = { quit: false, finished: false, vis: [], t0: 0 };
-  const step = (t) => { $("#stepinfo").textContent = t; };
+  let log = () => {};                // anonymous stage-only progress log, set up after the group/version are known
+  const STAGE = { "Instructions": "instructions", "Practice": "practice", "Part 1 of 2": "study", "Shape task": "distractor", "Part 2 of 2": "test", "A few questions": "questions" };
+  const step = (t) => { $("#stepinfo").textContent = t; if (STAGE[t]) log(STAGE[t]); };
   const card = (html) => `<div class="card">${html}</div>`;
 
   // ---------- load ----------
@@ -42,6 +44,8 @@
     return { version: Math.floor(Math.random() * 5), keymap: Math.floor(Math.random() * 2), group: Math.random() < CFG.controlShare ? "control" : "cue", ticket: null, source: "client" };
   }
   const asg = await assign();
+  log = WM.progressLogger(BACKEND || new URL(CFG.endpoints.save, ROOT).href, asg, DEV);
+  window.addEventListener("pagehide", () => { if (!S.finished && !S.quit && log.closed) log.closed(); });
   const seed = BOT && Q.has("seed") ? Number(Q.get("seed")) : crypto.getRandomValues(new Uint32Array(1))[0];
   const control = asg.group === "control";
   const plan = WM.buildPlan(stim, asg.version, seed, asg.group);
@@ -80,6 +84,7 @@
         const k = (d.response || "").toLowerCase();
         d.resp = k === keyOld ? "old" : "new"; d.correct = d.resp === (d.isOld ? "old" : "new");
         d.hidden = d.hiddenAtOnset || S.vis.length > d.v0;
+        if (d.task === "test" && (d.trial === 1 || d.trial % 10 === 0)) log("test", d.trial);
         if (BOT) d.rt = Math.round(600 + Math.random() * 900);
       } },
   ];
@@ -161,7 +166,7 @@
   const consentTrial = {
     type: F, html: `${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" name="agree" required><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label>`,
     button_label: "Start", data: { task: "consent" },
-    on_finish: (d) => { consent = { agreed: d.response.agree === "on", ts: new Date().toISOString(), textSha256: consentSha }; },
+    on_finish: (d) => { consent = { agreed: d.response.agree === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); },
   };
   const timeline = [setStep("Consent"), consentTrial, setStep("Instructions")];
   timeline.push(info(T.intro), ...(control ? [] : [info(T.cueExplain)]), setStep("Practice"), info(T.practiceIntro), info(T.practiceStudyGo, "Start"));
@@ -180,7 +185,7 @@
     formTrial("About you", "", WM.FIELDS.demo, "demo"));
   timeline.push({
     timeline: [
-      { type: C, async: true, func: (done) => { $("#quit").hidden = true; payload = payload || buildPayload(); trySave(payload).then((ok) => { saveState.ok = ok; done(); }); }, data: { task: "save" } },
+      { type: C, async: true, func: (done) => { $("#quit").hidden = true; log("saving"); payload = payload || buildPayload(); trySave(payload).then((ok) => { saveState.ok = ok; done(); }); }, data: { task: "save" } },
       { conditional_function: () => !saveState.ok, type: B, choices: ["Download file", "Try again"], data: { task: "savefail" },
         stimulus: card(`<h2>Your answers could not be sent</h2><p>Check your internet connection and try again. If it keeps failing, download your data file and send it to the researchers.</p>`),
         on_finish: (d) => {
@@ -192,7 +197,7 @@
   });
   timeline.push({ type: C, func: () => {
     if (saveState.ok && !DEV) { try { localStorage.setItem("wm_done", "1"); } catch (e) { /* ignore */ } }
-    S.finished = true; step("Finished"); $("#quit").hidden = true;
+    S.finished = true; log(saveState.ok ? "complete" : "downloaded"); step("Finished"); $("#quit").hidden = true;
     window.__result = { code: payload.participantCode, how: saveState.ok ? "saved" : "downloaded", trials: payload.trials.length, catches: payload.catches.length };
     window.__done = true;
   } }, { type: K, stimulus: () => card(WM.debriefFor(debriefHtml, asg.group, payload.participantCode)), choices: "NO_KEYS", data: { task: "debrief" } });
@@ -203,7 +208,7 @@
   WM.guardUnload(() => !S.quit && !S.finished, DEV);
   $("#quit").addEventListener("click", () => {
     if (!BOT && !confirm(T.quitConfirm)) return;
-    S.quit = true; $("#quit").hidden = true; step("");
+    log("quit"); S.quit = true; $("#quit").hidden = true; step("");
     jsPsych.abortExperiment(card(T.quitDone));
   });
 

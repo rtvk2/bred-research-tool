@@ -12,6 +12,7 @@
   const BACKEND = (DEV && Q.get("backend")) || CFG.backend || "";
   const { COND, CI, mulberry32, shuffle, buildPlan, buildPractice, goNoGoList, debriefFor, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode } = window.WM;
   const S = { quit: false, finished: false, vis: [] };
+  let log = () => {};                // anonymous stage-only progress log, set up after the group/version are known
   const $ = (s, r = document) => r.querySelector(s);
   const stage = $("#stage");
 
@@ -234,6 +235,7 @@
     WM.guardUnload(() => !S.quit && !S.finished, DEV);
     $("#quit").addEventListener("click", () => {
       if (!BOT && !confirm(T.quitConfirm)) return;
+      log("quit");
       S.quit = true; stage.className = ""; stage.innerHTML = `<div class="card">${T.quitDone}</div>`; $("#quit").hidden = true; setStep("");
     });
 
@@ -257,48 +259,53 @@
     });
 
     const asg = await assign();
+    log = WM.progressLogger(BACKEND || CFG.endpoints.save, asg, DEV);
+    log("consent");
+    window.addEventListener("pagehide", () => { if (!S.finished && !S.quit && log.closed) log.closed(); });
     const seed = BOT && Q.has("seed") ? Number(Q.get("seed")) : crypto.getRandomValues(new Uint32Array(1))[0];
     const control = asg.group === "control";
     const plan = buildPlan(stim, asg.version, seed, asg.group);
     const prac = buildPractice(stim, mulberry32(seed ^ 0x9e3779b9), asg.group);
     const frameMs = await measureFrames();
 
-    setStep("Instructions");
+    setStep("Instructions"); log("instructions");
     if (matchMedia("(pointer:coarse)").matches || innerWidth < 700)
       await info(`<div class="warn">This study works best on a laptop or desktop computer with a keyboard. You can continue on this device, but a computer is better.</div>`);
     await info(T.intro);
     if (!control) await info(T.cueExplain);
 
-    setStep("Practice");
+    setStep("Practice"); log("practice");
     await info(T.practiceIntro); await info(T.practiceStudyGo, "Start");
     await studyPhase(prac.study, CFG.practiceStudyMs);
     await info(T.practiceTestGo, "Start");
     const practice = []; let pn = 0;
     for (const t of prac.order) practice.push(await recogTrial(t, asg.keymap, ++pn));
 
-    setStep("Part 1 of 2");
+    setStep("Part 1 of 2"); log("study");
     await info(T.realStudyGo, "Start the list");
     const studyLog = await studyPhase(plan.studyOrder, CFG.studyMs);
 
-    setStep("Shape task");
+    setStep("Shape task"); log("distractor");
     await info(T.distractorGo, "Start");
     const distr = await distractor(seed);
 
-    setStep("Part 2 of 2");
+    setStep("Part 2 of 2"); log("test");
     await info(control ? T.realTestGoControl : T.realTestGo, "Start");
     const trials = [], catches = []; let n = 0;
     for (const t of plan.order) {
       const rec = await recogTrial(t, asg.keymap, ++n); trials.push(rec);
+      if (n === 1 || n % 10 === 0) log("test", n);
       if (plan.catches.includes(n)) catches.push(await catchTrial(t, n));
     }
 
-    setStep("A few questions");
+    setStep("A few questions"); log("questions");
     const q = {};
     Object.assign(q, await form("A few questions", "", WM.FIELDS.open));
     if (!control) Object.assign(q, await form("A few questions", "", WM.FIELDS.check));
     Object.assign(q, await form("About your languages", "These help us interpret the results. Your answers are anonymous.", WM.FIELDS.lang));
     Object.assign(q, await form("About you", "", WM.FIELDS.demo));
 
+    if (S.quit) return;                 // someone who clicked Quit never reaches the save
     const code = makeCode();
     const payload = {
       schema: CFG.schema, appVersion: CFG.appVersion, devMode: DEV, bot: BOT, participantCode: code, ticket: asg.ticket,
@@ -311,8 +318,9 @@
       visibility: S.vis, questionnaire: q,
     };
     $("#quit").hidden = true;   // no quitting while the answers are being sent
+    log("saving");
     const how = await saveWithFallback(payload);
-    S.finished = true;
+    S.finished = true; log(how === "saved" ? "complete" : "downloaded");
     if (how === "saved" && !DEV) { try { localStorage.setItem("wm_done", "1"); } catch (e) { /* ignore */ } }
     setStep("Finished"); $("#quit").hidden = true;
     render(`<div class="card">${debriefFor(debriefHtml, asg.group, code)}</div>`);

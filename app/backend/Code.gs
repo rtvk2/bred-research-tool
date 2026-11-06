@@ -22,6 +22,16 @@ function setup() {                     // run once from the editor
   Logger.log('ready. Folder id: ' + PropertiesService.getScriptProperties().getProperty('FOLDER_ID'));
 }
 
+var STAGES = ['consent', 'instructions', 'practice', 'study', 'distractor', 'test', 'questions', 'saving', 'complete', 'downloaded', 'quit', 'closed'];
+var PROGRESS_HEADER = ['savedISO', 'sid', 'seq', 'stage', 'n', 'group', 'version', 'keymap', 'dev', 'last', 'clientMs'];
+
+// anonymous stage-only entries (no answers, no timings, no identity): one row per ping in the tab "progress"
+function progress_(d, size) {
+  if (size > 2000 || typeof d.sid !== 'string' || !/^[a-z0-9]{8,24}$/.test(d.sid) || STAGES.indexOf(d.stage) === -1) return { ok: false, error: 'bad progress' };
+  sheet_('progress', PROGRESS_HEADER).appendRow([new Date().toISOString(), d.sid, d.seq, d.stage, d.n, d.group || 'cue', d.version, d.keymap, d.dev === true, d.last || '', d.t]);
+  return { ok: true };
+}
+
 function sheet_(name, header) {
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(name);
@@ -104,6 +114,7 @@ function doPost(e) {
     if (!raw || raw.length > MAX_BODY) return json_({ ok: false, error: 'size' });
     var d;
     try { d = JSON.parse(raw); } catch (err) { return json_({ ok: false, error: 'bad json' }); }
+    if (d && d.type === 'progress') return json_(progress_(d, raw.length));
     var bad = validate_(d);
     if (bad) return json_({ ok: false, error: bad });
     var lock = LockService.getScriptLock();

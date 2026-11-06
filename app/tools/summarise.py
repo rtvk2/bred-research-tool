@@ -45,6 +45,33 @@ tr, pt = pd.DataFrame(rows), pd.DataFrame(parts)
 tr["resp_old"] = (tr.response == "old").astype(int)
 tr["rt_flag"] = (tr.rt < 300) | (tr.rt > 5000)
 
+# anonymous stage-only progress log (progress.jsonl, or the Apps Script "progress" tab exported as progress.csv): where did sessions end?
+prog_json, prog_csv = Path(a.data) / "progress.jsonl", Path(a.data) / "progress.csv"
+events = []
+if prog_json.exists():
+    events = [json.loads(x) for x in prog_json.read_text(encoding="utf8").splitlines() if x.strip()]
+elif prog_csv.exists():
+    events = pd.read_csv(prog_csv).to_dict("records")
+if events:
+    pe = pd.DataFrame(events)
+    if not a.include_dev and "dev" in pe:
+        pe = pe[pe.dev.astype(str).str.lower() != "true"]
+    ends = {}
+    for sid, g in pe.sort_values("seq").groupby("sid"):
+        fin = g.iloc[-1]
+        if fin.stage in ("complete", "downloaded"):
+            ends[sid] = "finished"
+        elif fin.stage == "quit":
+            ends[sid] = "clicked Quit at " + (g.iloc[-2].stage if len(g) > 1 else "consent")
+        elif fin.stage == "closed":
+            ends[sid] = "closed the tab at " + (fin["last"] if isinstance(fin.get("last"), str) and fin["last"] else "?")
+        else:
+            ends[sid] = "no end signal after " + str(fin.stage)
+    if ends:
+        print(f"progress log: {len(ends)} sessions started; how they ended:")
+        print(pd.Series(ends).value_counts().to_string())
+        print()
+
 hit = tr[tr.isOld].groupby("pid").resp_old.mean().rename("hit_rate")
 fa = tr[~tr.isOld].groupby("pid").resp_old.mean().rename("fa_rate_new")
 hid = tr.groupby("pid").hidden.sum().rename("hidden_trials")
