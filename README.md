@@ -1,6 +1,6 @@
 # Word memory study: the online app
 
-Online version of the experiment: a study list of 15 pseudowords and 10 real words, a 60 s shape task, then a 60-word OLD/NEW test in which most words carry a simulated "others' answers" cue (9 or 2 of 10 said OLD or NEW; one word in five has no cue, a within-person baseline). Every word comes from the Appendix of Bowers, Davis & Hanley (2005). The full design document, reasoning and power simulations are kept outside this repository.
+Online version of the experiment: a study list of 15 pseudowords and 10 real words, a 60 s shape task, then a 60-word OLD/NEW test in which most words carry a simulated "others' answers" cue (a high, 8 to 10, or low, 1 to 3, of 10 said OLD or NEW, varied at random within each level; one word in five has no cue, a within-person baseline). Every word comes from the Appendix of Bowers, Davis & Hanley (2005). The full design document, reasoning and power simulations are kept outside this repository.
 
 ## Two engines, one design
 Same stimuli, same counterbalancing code (`docs/shared.js`), same questionnaires, same saved data format. **Use only one engine for the whole sample** (mixing them would be a confound).
@@ -28,7 +28,7 @@ GitHub Pages only serves files, so something else must receive the data.
 cd app
 python server.py                 # http://127.0.0.1:8000  (custom)   and  /jspsych/  (jsPsych)
 ```
-Test mode, no real data (saved as `data/dev_*.json`): add `?dev=1`. `&fast=1` runs timers 50x faster; `?bot=1` auto-plays a whole session; `&v=0..3&k=0|1` force version and key map.
+Test mode, no real data: add `?dev=1`. Because `config.js` now holds the Apps Script address, test sessions are sent there; add `&backend=local` to keep them on this computer (saved as `data/dev_*.json`). `&fast=1` runs timers 50x faster; `?bot=1` auto-plays a whole session; `&v=0..3&k=0|1` force version and key map.
 
 ## Publish on github.io (route A)
 1. Do the Apps Script setup in `backend/README.md`; paste its `/exec` URL into `docs/config.js` as `backend`.

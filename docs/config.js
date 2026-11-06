@@ -17,10 +17,11 @@ window.CFG = {
   // group assignment fallback (the server normally decides): share of participants in the no-cue control group
   controlShare: 0,                // 0 = everyone gets the cue version (the no-cue baseline is within each person)
 
-  // ---- cue manipulation (form: 9 of 10 vs 2 of 10; valence OLD vs NEW) ----
+  // ---- cue manipulation: high (centred on 9 of 10) vs low (centred on 2 of 10), valence OLD vs NEW ----
+  // The number shown is drawn at random within each level, equally often within each condition, so the same two numbers do not repeat.
   crowdN: 10,
-  cueHigh: 9,
-  cueLow: 2,
+  cueHighValues: [8, 9, 10],
+  cueLowValues: [1, 2, 3],
 
   // ---- data quality ----
   catchTrials: 3,                 // unannounced "what did the others say?" checks

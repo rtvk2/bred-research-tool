@@ -6,8 +6,8 @@ window.WM = (() => {
   const COND = ["HO", "LO", "HN", "LN", "NC"]; // high-OLD, low-OLD, high-NEW, low-NEW, no cue (within-person baseline)
   const N_COND = COND.length;
   const CI = {
-    HO: { count: CFG.cueHigh, val: "OLD" }, LO: { count: CFG.cueLow, val: "OLD" },
-    HN: { count: CFG.cueHigh, val: "NEW" }, LN: { count: CFG.cueLow, val: "NEW" },
+    HO: { vals: CFG.cueHighValues, val: "OLD" }, LO: { vals: CFG.cueLowValues, val: "OLD" },
+    HN: { vals: CFG.cueHighValues, val: "NEW" }, LN: { vals: CFG.cueLowValues, val: "NEW" },
   };
   function mulberry32(a) {
     return () => { a |= 0; a = (a + 0x6d2b79f5) | 0; let t = Math.imul(a ^ (a >>> 15), 1 | a);
@@ -45,8 +45,14 @@ window.WM = (() => {
     KINDS.forEach((kind) => wk[kind].forEach((w, i) => {
       const cond = control ? "NC" : COND[(i + version + OFF[kind]) % N_COND];
       trials.push({ itemId: w.id, status: kind, isOld: IS_OLD[kind], lexical: LEX[kind], word: w.word, cond,
-        cueCount: cond === "NC" ? null : CI[cond].count, cueValence: cond === "NC" ? null : CI[cond].val, sim: w.sim });
+        cueCount: null, cueValence: cond === "NC" ? null : CI[cond].val, sim: w.sim });
     }));
+    // the number shown varies within each level: balanced within each condition, in random order across trials
+    COND.slice(0, 4).forEach((c) => {
+      const idx = trials.reduce((a, t, i) => (t.cond === c ? a.concat(i) : a), []);
+      const vals = shuffle(idx.map((_, k) => CI[c].vals[k % CI[c].vals.length]), rnd);
+      idx.forEach((ti, k) => { trials[ti].cueCount = vals[k]; });
+    });
     let order, tries = 0;
     do { order = shuffle(trials, rnd); tries++; }
     while (!(runOK(order, "status", CFG.maxStatusRun) && (control || runOK(order, "cueValence", CFG.maxValenceRun))) && tries < 3000);
@@ -71,7 +77,7 @@ window.WM = (() => {
     const words = shuffle([...stim.practice.old.map((w) => ["oldP", w]), ...stim.practice.new.map((w) => ["foilW", w])], rnd);
     const conds = shuffle(["HO", "LN", "LO", "HN"], rnd);
     return { study: stim.practice.study, order: words.map(([status, word], i) => ({ itemId: null, status, isOld: IS_OLD[status], lexical: LEX[status], word,
-      cond: control ? "NC" : conds[i], cueCount: control ? null : CI[conds[i]].count, cueValence: control ? null : CI[conds[i]].val, sim: null })) };
+      cond: control ? "NC" : conds[i], cueCount: control ? null : CI[conds[i]].vals[Math.floor(rnd() * CI[conds[i]].vals.length)], cueValence: control ? null : CI[conds[i]].val, sim: null })) };
   }
   // distractor: go (circle) / no-go (square), goShare of the trials are go
   function goNoGoList(rnd, n, goShare) {

@@ -16,7 +16,8 @@ from pathlib import Path
 APP = Path(__file__).resolve().parent.parent
 stim = json.loads((APP / "docs" / "stimuli.json").read_text(encoding="utf8"))
 COND = ["HO", "LO", "HN", "LN", "NC"]
-INFO = {"HO": (9, "OLD"), "LO": (2, "OLD"), "HN": (9, "NEW"), "LN": (2, "NEW"), "NC": (None, None)}
+INFO = {"HO": "OLD", "LO": "OLD", "HN": "NEW", "LN": "NEW", "NC": None}
+VALS = {"HO": [8, 9, 10], "LO": [1, 2, 3], "HN": [8, 9, 10], "LN": [1, 2, 3]}   # the number shown varies within each level
 OFF = {"oldP": 0, "lure": 1, "foilW": 2, "foilP": 3, "oldW": 2}
 ISOLD = {"oldP": True, "oldW": True, "lure": False, "foilW": False, "foilP": False}
 LEX = {"oldP": "nonword", "oldW": "word", "lure": "word", "foilW": "word", "foilP": "nonword"}
@@ -59,10 +60,17 @@ for v in range(5):
     for kind, ws in words.items():
         for i, word in enumerate(ws):
             cond = COND[(i + v + OFF[kind]) % 5]
-            n, val = INFO[cond]
-            rows.append({"word": word, "kind": kind, "lexicality": LEX[kind], "condition": cond, "cue_count": n if n is not None else "",
-                         "cue_valence": val or "", "cue_text": f"{n} of 10 other participants said {val}" if n is not None else "(no cue shown)",
+            val = INFO[cond]
+            rows.append({"word": word, "kind": kind, "lexicality": LEX[kind], "condition": cond, "cue_count": "",
+                         "cue_valence": val or "", "cue_text": "(no cue shown)",
                          "correct_answer": "OLD" if ISOLD[kind] else "NEW"})
+    for c in ("HO", "LO", "HN", "LN"):
+        idx = [k for k, r in enumerate(rows) if r["condition"] == c]
+        vals = [VALS[c][k % 3] for k in range(len(idx))]
+        rng.shuffle(vals)
+        for k, n in zip(idx, vals):
+            rows[k]["cue_count"] = n
+            rows[k]["cue_text"] = f"{n} of 10 other participants said {rows[k]['cue_valence']}"
     for _ in range(20000):
         rng.shuffle(rows)
         if run_ok(rows, "kind", 3) and run_ok(rows, "cue_valence", 4):
