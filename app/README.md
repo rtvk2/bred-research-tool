@@ -58,6 +58,7 @@ One JSON file per completed participant (`WM-XXXXXXXX.json`; `dev_*` = test). No
 ```
 python tools/summarise.py        # writes analysis/trials.csv and participants.csv, prints the cell table
 ```
+In the Google Sheet the `trials` and `participants` tabs hold the same data in readable form (one row per test word, one row per person); the `codebook` tab explains every column.
 
 ## Where things are
 | File | What |

@@ -3,7 +3,9 @@
  * Does only two things: hands out a group (cue : no-cue control = 2 : 1) and a balanced counterbalancing cell (GET ?action=assign) and stores one JSON file
  * per finished participant (POST). The website itself is NOT served from here.
  *
- * Sheet tabs created automatically: "assigned" (cells handed out) and "done" (one row per saved participant).
+ * Sheet tabs created automatically: "assigned" (cells handed out), "done" (index: one row per saved participant),
+ * and the readable data: "trials" (one row per test word), "participants" (one row per person, with the questionnaire) and "codebook"
+ * (what every column means). The JSON files in Drive are the master copy; run rebuildTables() to regenerate "trials" and "participants" from them.
  * Files: one JSON per participant in the Drive folder "wm_study_data" (same format as app/data/*.json).
  * Apps Script does not expose client IPs to this code.
  *
@@ -18,6 +20,8 @@ var ASSIGNED_HEADER = ['ticket', 'version', 'keymap', 'timeMs', 'group'];
 function setup() {                     // run once from the editor
   sheet_('assigned', ASSIGNED_HEADER);
   sheet_('done', DONE_HEADER);
+  tables_();
+  codebook_();
   folder_();
   Logger.log('ready. Folder id: ' + PropertiesService.getScriptProperties().getProperty('FOLDER_ID'));
 }
@@ -32,10 +36,13 @@ function progress_(d, size) {
   return { ok: true };
 }
 
-function sheet_(name, header) {
+function sheet_(name, header, textCols) {
   var ss = SpreadsheetApp.getActive();
   var sh = ss.getSheetByName(name);
-  if (!sh) { sh = ss.insertSheet(name); sh.appendRow(header); }
+  if (!sh) {
+    sh = ss.insertSheet(name); sh.appendRow(header);
+    (textCols || []).forEach(function (c) { sh.getRange(1, c, sh.getMaxRows(), 1).setNumberFormat('@'); });   // free text stays text, never a formula
+  }
   return sh;
 }
 
@@ -125,7 +132,9 @@ function doPost(e) {
       if (codes.indexOf(d.participantCode) !== -1) return json_({ ok: false, error: 'duplicate code' });
       var name = (d.devMode ? 'dev_' : '') + d.participantCode + '.json';
       var file = folder_().createFile(name, JSON.stringify(d), MimeType.PLAIN_TEXT);
-      sh.appendRow([d.participantCode, d.assignment.version, d.assignment.keymap, new Date().toISOString(), d.devMode === true, file.getId(), d.ticket || '', d.assignment.group || 'cue']);
+      var savedISO = new Date().toISOString();
+      sh.appendRow([d.participantCode, d.assignment.version, d.assignment.keymap, savedISO, d.devMode === true, file.getId(), d.ticket || '', d.assignment.group || 'cue']);
+      try { addTables_(d, savedISO); } catch (err2) { Logger.log('tables: ' + err2); }   // the answers are already safe in Drive; rebuildTables() can redo this
       return json_({ ok: true });
     } finally {
       lock.releaseLock();
@@ -133,4 +142,122 @@ function doPost(e) {
   } catch (err) {
     return json_({ ok: false, error: 'server' });
   }
+}
+
+// ---------- readable tables (derived from the saved JSON; the JSON in Drive stays the master copy) ----------
+var Q_FIELDS = ['aboutOpen', 'oddOpen', 'believable', 'influence', 'firstLanguage', 'firstLanguageOther', 'otherLanguages', 'ageEnglish', 'schoolMedium', 'englishShare', 'englishEase', 'age', 'gender', 'degree', 'priorParticipation'];
+var TRIALS_HEADER = ['code', 'devMode', 'group', 'version', 'keymap', 'trial', 'word', 'kind', 'kindLabel', 'condition', 'conditionLabel', 'cueValence', 'cueCount', 'studied', 'respOld', 'correct', 'rt_ms', 'input', 'hidden'];
+var PARTICIPANTS_BASE = ['code', 'savedISO', 'devMode', 'group', 'version', 'keymap', 'engine', 'durationMin', 'device', 'os', 'browser', 'screen', 'frameMs', 'timeZone', 'dataSharing', 'consentISO',
+  'catchCorrect', 'catchTotal', 'distractorHits', 'distractorMisses', 'distractorFalseAlarms', 'distractorCorrectRej', 'hitRate', 'lureOldRate', 'foilOldRate', 'nTrials', 'hiddenTrials'];
+var PARTICIPANTS_HEADER = PARTICIPANTS_BASE.concat(Q_FIELDS);
+var KIND_ = { oldP: 'studied made-up word', oldW: 'studied real word', lure: 'real look-alike of a studied made-up word (never shown)', foilW: 'new unrelated real word', foilP: 'new made-up word' };
+var COND_ = { HO: 'high cue, others said OLD', LO: 'low cue, others said OLD', HN: 'high cue, others said NEW', LN: 'low cue, others said NEW', NC: 'no cue shown' };
+
+function tables_() {
+  var textCols = [PARTICIPANTS_HEADER.indexOf('aboutOpen') + 1, PARTICIPANTS_HEADER.indexOf('oddOpen') + 1, PARTICIPANTS_HEADER.indexOf('firstLanguageOther') + 1, PARTICIPANTS_HEADER.indexOf('otherLanguages') + 1];
+  return { trials: sheet_('trials', TRIALS_HEADER), participants: sheet_('participants', PARTICIPANTS_HEADER, textCols) };
+}
+
+function rate_(trials, pred) {
+  var n = 0, o = 0;
+  trials.forEach(function (t) { if (pred(t)) { n++; if (t.response === 'old') o++; } });
+  return n ? Math.round(1000 * o / n) / 1000 : '';
+}
+
+function trialRows_(d) {
+  var a = d.assignment || {};
+  return (d.trials || []).map(function (t) {
+    return [d.participantCode, d.devMode === true, a.group || 'cue', a.version, a.keymap, t.trial, t.word, t.status, KIND_[t.status] || '', t.condition, COND_[t.condition] || '',
+      t.cueValence || '', (t.cueCount === null || t.cueCount === undefined) ? '' : t.cueCount, t.isOld ? 1 : 0, t.response === 'old' ? 1 : 0, t.correct ? 1 : 0, t.rt, t.input || '', t.hidden ? 1 : 0];
+  });
+}
+
+function participantRow_(d, savedISO) {
+  var a = d.assignment || {}, dv = d.device || {}, c = d.consent || {}, ds = d.distractor || {}, at = d.attention || {}, q = d.questionnaire || {}, tm = d.timing || {}, tr = d.trials || [];
+  var base = [d.participantCode, savedISO, d.devMode === true, a.group || 'cue', a.version, a.keymap, d.engine || '', tm.durationMs ? Math.round(tm.durationMs / 6000) / 10 : '',
+    dv.coarsePointer ? 'touch' : 'keyboard/mouse', dv.os || '', dv.browser || '', (dv.width || '') + 'x' + (dv.height || ''), dv.frameMs === undefined ? '' : dv.frameMs, dv.tz || '', c.dataSharing === true, c.ts || '',
+    at.catchCorrect, at.catchTotal, ds.hits, ds.misses, ds.falseAlarms, ds.correctRejections,
+    rate_(tr, function (t) { return t.isOld; }), rate_(tr, function (t) { return t.status === 'lure'; }), rate_(tr, function (t) { return t.status === 'foilW' || t.status === 'foilP'; }),
+    tr.length, tr.filter(function (t) { return t.hidden; }).length];
+  return base.concat(Q_FIELDS.map(function (k) { return q[k] === undefined ? '' : q[k]; }));
+}
+
+function write_(sh, rows) {
+  if (rows.length) sh.getRange(sh.getLastRow() + 1, 1, rows.length, rows[0].length).setValues(rows);
+}
+
+function addTables_(d, savedISO) {
+  var t = tables_();
+  write_(t.trials, trialRows_(d));
+  write_(t.participants, [participantRow_(d, savedISO)]);
+  if (!SpreadsheetApp.getActive().getSheetByName('codebook')) codebook_();
+}
+
+// run from the editor any time: rewrites "trials", "participants" and "codebook" from the JSON files in the Drive folder
+function rebuildTables() {
+  var lock = LockService.getScriptLock();
+  lock.waitLock(30000);
+  try {
+    var t = tables_(), items = [], files = folder_().getFiles();
+    [t.trials, t.participants].forEach(function (sh) { var n = sh.getLastRow(); if (n > 1) sh.getRange(2, 1, n - 1, sh.getLastColumn()).clearContent(); });
+    while (files.hasNext()) {
+      var f = files.next(), d;
+      if (!/\.json$/.test(f.getName())) continue;
+      try { d = JSON.parse(f.getBlob().getDataAsString()); } catch (err) { continue; }
+      if (validate_(d)) continue;
+      items.push({ iso: f.getDateCreated().toISOString(), d: d });
+    }
+    items.sort(function (a, b) { return a.iso < b.iso ? -1 : 1; });
+    var trialRows = [], partRows = [];
+    items.forEach(function (it) { partRows.push(participantRow_(it.d, it.iso)); trialRows = trialRows.concat(trialRows_(it.d)); });
+    write_(t.trials, trialRows); write_(t.participants, partRows);
+    codebook_();
+    Logger.log('rebuilt: ' + partRows.length + ' participants, ' + trialRows.length + ' trials');
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+var CODEBOOK = [
+  ['trials', 'code', 'Anonymous participant code (shown to the participant at the end).'],
+  ['trials', 'devMode', 'TRUE = a test session. Leave these out of the analysis.'],
+  ['trials', 'group', 'Always "cue": every participant does every condition; there is no control group.'],
+  ['trials', 'version', 'Word-list version 0 to 4: which words appear under which cue condition.'],
+  ['trials', 'keymap', '0 = OLD on the left (F key), NEW on the right (J). 1 = swapped.'],
+  ['trials', 'trial', 'Position in the 60-word test (1 to 60).'],
+  ['trials', 'word', 'The word shown.'],
+  ['trials', 'kind', 'oldP = studied made-up word; oldW = studied real word; lure = real look-alike of a studied made-up word, never shown before; foilW = new unrelated real word; foilP = new made-up word.'],
+  ['trials', 'kindLabel', 'The same as kind, in words.'],
+  ['trials', 'condition', 'HO = high cue, others said OLD; LO = low cue, OLD; HN = high cue, others said NEW; LN = low cue, NEW; NC = no cue shown.'],
+  ['trials', 'conditionLabel', 'The same as condition, in words.'],
+  ['trials', 'cueValence', 'What the other participants were shown as saying (OLD or NEW). Blank when no cue.'],
+  ['trials', 'cueCount', 'How many of the 10 other participants were shown as saying it (high 8 to 10, low 1 to 3). Blank when no cue.'],
+  ['trials', 'studied', '1 = the word was in the study list, 0 = it was not.'],
+  ['trials', 'respOld', '1 = the participant answered OLD, 0 = NEW. Main outcome: for kind = lure, respOld = 1 is a false recognition.'],
+  ['trials', 'correct', '1 = the answer matched the truth (studied words are OLD, all others NEW).'],
+  ['trials', 'rt_ms', 'Milliseconds from the word appearing to the answer (includes reading the cue).'],
+  ['trials', 'input', 'key, touch or click.'],
+  ['trials', 'hidden', '1 = the page was hidden (tab switched) during this trial.'],
+  ['participants', 'code, savedISO, devMode, group, version, keymap', 'As in trials; savedISO is the save time (UTC).'],
+  ['participants', 'engine, durationMin', 'Software version and minutes from consent to saving.'],
+  ['participants', 'device, os, browser, screen, frameMs, timeZone', 'touch or keyboard/mouse; operating system; browser; window size in pixels; screen refresh interval in ms; time zone.'],
+  ['participants', 'dataSharing, consentISO', 'TRUE = ticked the optional box allowing anonymous data in a public database; time consent was given.'],
+  ['participants', 'catchCorrect, catchTotal', 'Attention questions answered fully correctly, out of 3.'],
+  ['participants', 'distractorHits, Misses, FalseAlarms, CorrectRej', 'Shape task: taps on circles, missed circles, taps on squares, squares correctly ignored (60 shapes).'],
+  ['participants', 'hitRate', 'Share of studied words answered OLD.'],
+  ['participants', 'lureOldRate', 'Share of look-alike real words answered OLD (the false recognition rate, all cue conditions pooled).'],
+  ['participants', 'foilOldRate', 'Share of new unrelated words (real or made-up) answered OLD.'],
+  ['participants', 'nTrials, hiddenTrials', 'Test trials saved (should be 60); trials where the page was hidden.'],
+  ['participants', 'aboutOpen, oddOpen', 'Free-text answers: what the participant thought the study was about; anything odd they noticed.'],
+  ['participants', 'believable, influence', 'Ratings 1 to 7: how believable the other participants\' answers seemed; how much they influenced the participant.'],
+  ['participants', 'firstLanguage ... englishEase', 'Language background questions (first language, other languages, age learned English, school medium, share of daily English, ease of reading English 1 to 7).'],
+  ['participants', 'age, gender, degree, priorParticipation', 'Demographics and whether they had taken part in a similar study before.']
+];
+
+function codebook_() {
+  var ss = SpreadsheetApp.getActive(), sh = ss.getSheetByName('codebook');
+  if (!sh) sh = ss.insertSheet('codebook');
+  sh.clearContents();
+  var rows = [['tab', 'column', 'meaning']].concat(CODEBOOK);
+  sh.getRange(1, 1, rows.length, 3).setValues(rows);
 }

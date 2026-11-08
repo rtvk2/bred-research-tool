@@ -23,3 +23,6 @@ Download the Drive folder `wm_study_data`, drop the files into `app/data/`, then
 
 ## Limits
 Apps Script free quotas are far above what 100 participants need. It is a cheap, working option rather than a robust one: do not edit the deployment during data collection, and download a backup of the folder after each batch.
+
+## Reading the data in the sheet
+Tabs: `trials` (one row per test word; filter `devMode` = FALSE; `respOld` is the outcome, 1 = answered OLD, so for `kind` = lure it is a false recognition), `participants` (one row per person, with the questionnaire answers), `codebook` (what every column means), `done` (index of the saved files), `assigned` and `progress`. The JSON files in the Drive folder are the master copy. After pasting a new `Code.gs` (and making a new deployment version), run `rebuildTables` once from the editor: it creates the tabs if missing and rewrites `trials`, `participants` and `codebook` from the Drive files. It can be run again any time a table looks wrong.
