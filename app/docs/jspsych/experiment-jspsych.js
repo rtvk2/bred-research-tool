@@ -51,7 +51,9 @@
     return { version: Math.floor(Math.random() * 5), keymap: Math.floor(Math.random() * 2), group: Math.random() < CFG.controlShare ? "control" : "cue", ticket: null, source: "client" };
   }
   const asg = await assign();
-  log = WM.progressLogger(BACKEND || new URL(CFG.endpoints.save, ROOT).href, asg, DEV);
+  const tries = WM.attemptTracker(DEV);
+  const sendLog = WM.progressLogger(BACKEND || new URL(CFG.endpoints.save, ROOT).href, asg, DEV);
+  log = Object.assign((s, n) => { tries.mark(s); sendLog(s, n); }, { closed: sendLog.closed });
   window.addEventListener("pagehide", () => { if (!S.finished && !S.quit && log.closed) log.closed(); });
   const seed = BOT && Q.has("seed") ? Number(Q.get("seed")) : crypto.getRandomValues(new Uint32Array(1))[0];
   const control = asg.group === "control";
@@ -156,7 +158,7 @@
     return {
       schema: CFG.schema, appVersion: CFG.appVersion, engine: "jspsych 7.3.4", devMode: DEV, bot: BOT, participantCode: WM.makeCode(), ticket: asg.ticket,
       assignment: { group: asg.group, version: asg.version, keymap: asg.keymap, source: asg.source, seed, orderTries: plan.orderTries },
-      consent, device: WM.deviceInfo(frameMs),
+      consent, session: tries.info(), device: WM.deviceInfo(frameMs),
       timing: { startISO, endISO: new Date().toISOString(), durationMs: Math.round(performance.now() - tStart) },
       design: { cueHighValues: CFG.cueHighValues, cueLowValues: CFG.cueLowValues, crowdN: CFG.crowdN, studyMs: CFG.studyMs, distractorMs: CFG.distractorMs, stimuliSeed: stim.seed, stimuliSource: stim.source },
       study: { order: plan.studyOrder, kinds: plan.studyKinds, log: get("study").map((d) => ({ word: d.word, shownMs: d.shownMs })) },
@@ -184,7 +186,7 @@
   const consentTrial = {
     type: F, html: `${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" name="agree" required><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label><label class="agree"><input type="checkbox" name="share"><span>${T.shareLabel}</span></label>`,
     button_label: "Start", data: { task: "consent" },
-    on_finish: (d) => { consent = { agreed: d.response.agree === "on", dataSharing: d.response.share === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); keepAwake(); },
+    on_finish: (d) => { consent = { agreed: d.response.agree === "on", dataSharing: d.response.share === "on", ts: new Date().toISOString(), textSha256: consentSha }; tries.begin(); log("consent"); keepAwake(); },
   };
   const timeline = [setStep("Consent"), consentTrial, setStep("Instructions")];
   timeline.push(...(TOUCH ? [info(T.phoneNote)] : []), info(T.intro), ...(control ? [] : [info(T.cueExplain)]), setStep("Practice"), info(T.practiceIntro), info(T.practiceStudyGo, "Start"));
@@ -218,7 +220,7 @@
     S.finished = true; log(saveState.ok ? "complete" : "downloaded"); step("Finished"); $("#quit").hidden = true;
     window.__result = { code: payload.participantCode, how: saveState.ok ? "saved" : "downloaded", trials: payload.trials.length, catches: payload.catches.length };
     window.__done = true;
-  } }, { type: K, stimulus: () => card(WM.debriefFor(debriefHtml, asg.group, payload.participantCode)), choices: "NO_KEYS", data: { task: "debrief" } });
+  } }, { type: K, stimulus: () => card(WM.debriefFor(debriefHtml, asg.group, payload.participantCode, payload.trials)), choices: "NO_KEYS", data: { task: "debrief" } });
 
   // ---------- run ----------
   jsPsych = initJsPsych({ display_element: stage, show_progress_bar: false });

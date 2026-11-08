@@ -18,9 +18,11 @@ ap = argparse.ArgumentParser()
 ap.add_argument("--data", default=str(Path(__file__).resolve().parent.parent / "data"))
 ap.add_argument("--out", default=str(Path(__file__).resolve().parent.parent / "analysis"))
 ap.add_argument("--include-dev", action="store_true")
+ap.add_argument("--keep-restarts", action="store_true", help="do not exclude people whose earlier attempt had reached the test (sensitivity check)")
 a = ap.parse_args()
 
 N_TEST = 60
+LATE_STAGES = ("test", "questions", "saving")
 KINDS = ["oldP", "oldW", "lure", "foilW", "foilP"]
 rows, parts = [], []
 for p in sorted(Path(a.data).glob("*.json")):
@@ -37,6 +39,7 @@ for p in sorted(Path(a.data).glob("*.json")):
                   "distractor_acc": round((dist.get("hits", 0) + dist.get("correctRejections", 0)) / dist["n"], 3) if dist.get("n") else None,
                   "duration_min": round(d["timing"]["durationMs"] / 60000, 1), "frame_ms": d["device"].get("frameMs"),
                   "device": "touch" if d["device"].get("coarsePointer") else "keyboard/mouse", "data_sharing": d.get("consent", {}).get("dataSharing"),
+                  "attempt": (d.get("session") or {}).get("attempt"), "prior_stage": (d.get("session") or {}).get("priorStage") or "",
                   "believable": q.get("believable"), "influence": q.get("influence"), "first_language": q.get("firstLanguage"),
                   "prior": q.get("priorParticipation"), "english_ease": q.get("englishEase"), "age_english": q.get("ageEnglish"),
                   "english_share": q.get("englishShare")})
@@ -82,7 +85,12 @@ pt["flag_attention"] = (pt.group == "cue") & (pt.catch_correct < 2)
 pt["flag_hits_not_above_fa"] = pt.hit_rate <= pt.fa_rate_new
 pt["flag_prior"] = pt.prior == "Yes"
 pt["flag_hidden"] = pt.hidden_trials > 0.1 * N_TEST            # tab hidden on more than 10% of test trials
-flags = ["flag_incomplete", "flag_attention", "flag_hits_not_above_fa", "flag_prior", "flag_hidden"]
+pt["flag_restart_late"] = pt.prior_stage.isin(LATE_STAGES)      # an earlier attempt in this browser had reached the test (test words already seen)
+flags = ["flag_incomplete", "flag_attention", "flag_hits_not_above_fa", "flag_prior", "flag_hidden"] + ([] if a.keep_restarts else ["flag_restart_late"])
+n_restart = int((pt.attempt > 1).sum())
+print(f"restarts (this browser began the study before): {n_restart} of {len(pt)}; earlier attempt had reached the test: {int(pt.flag_restart_late.sum())}"
+      + ("  [--keep-restarts: these are kept]" if a.keep_restarts else "  [excluded; run with --keep-restarts for the sensitivity check]"))
+print("   by furthest earlier stage:", pt[pt.attempt > 1].prior_stage.value_counts().to_dict(), "| people who say they took part before:", int(pt.flag_prior.sum()), "(also excluded)")
 print("optional data-sharing box ticked:", pt.data_sharing.value_counts(dropna=False).to_dict())
 print("devices:", pt.device.value_counts().to_dict(), "| how answers were given:", tr.input.value_counts().to_dict(), "(phones and computers differ in timing; use device as a covariate in a sensitivity check)")
 pt["excluded"] = pt[flags].any(axis=1)

@@ -85,10 +85,23 @@ window.WM = (() => {
     return shuffle(Array.from({ length: n }, (_, i) => (i < nGo ? "go" : "nogo")), rnd);
   }
   // keep only the debrief sections for this group (<div data-group="cue">...</div> / data-group="control") and insert the code
-  function debriefFor(html, group, code) {
+  function debriefFor(html, group, code, trials) {
     const doc = new DOMParser().parseFromString(html, "text/html");
     doc.querySelectorAll("[data-group]").forEach((el) => { if (el.getAttribute("data-group") !== group) el.remove(); });
-    return doc.body.innerHTML.replace("{{CODE}}", esc(code));
+    return doc.body.innerHTML.replace("{{CODE}}", esc(code)).replace("{{REPORT}}", reportHtml(trials));
+  }
+  // The participant's own counts, shown after the data are saved (so they cannot change the answers). Plain counts only; no score.
+  function reportHtml(trials) {
+    if (!Array.isArray(trials) || !trials.length) return "";
+    const said = (t) => t.response === "old";
+    const count = (f) => { const g = trials.filter(f); return { n: g.length, old: g.filter(said).length }; };
+    const studied = count((t) => t.isOld), lure = count((t) => t.status === "lure"), other = count((t) => !t.isOld && t.status !== "lure");
+    const cued = trials.filter((t) => t.cueValence === "OLD" || t.cueValence === "NEW");
+    const same = cued.filter((t) => t.response === t.cueValence.toLowerCase()).length;
+    const li = [`<li>Words from the list that you recognised: <strong>${studied.old} of ${studied.n}</strong>.</li>`,
+      `<li>Real words that look like a made-up word from the list (such as BANANA for BANARA), which were never shown, that you called OLD: <strong>${lure.old} of ${lure.n}</strong>. Other new words that you called OLD: <strong>${other.old} of ${other.n}</strong>.</li>`];
+    if (cued.length) li.push(`<li>On the words that showed the &ldquo;other participants&rdquo;, your answer (OLD or NEW) was the same as the one shown for <strong>${same} of ${cued.length}</strong> words. If the answers shown made no difference to you, about ${Math.round(cued.length / 2)} would be expected.</li>`);
+    return `<h3>Your own answers</h3><p>For your interest, here is what you did. It is a summary of these 60 words only, not a test of how good your memory is.</p><ul>${li.join("")}</ul>`;
   }
 
   // ---------- questionnaire definitions ----------
@@ -167,5 +180,25 @@ window.WM = (() => {
     log.closed = () => send("closed", null, { last });
     return log;
   }
-  return { progressLogger, guardUnload, goNoGoList, debriefFor, KINDS, IS_OLD, LEX, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode, COND, CI, mulberry32, shuffle, buildPlan, buildPractice, FIELDS: { open: F_OPEN, check: F_CHECK, lang: F_LANG, demo: F_DEMO } };
+  // Restart bookkeeping, this browser only: how many earlier attempts got past the consent screen and how far the furthest
+  // one got. Saved with the answers so a restart can be handled in the analysis; it does not stop anyone from starting again.
+  // Test mode uses its own key, so testing never marks the real link as a restart.
+  const STAGE_RANK = ["consent", "instructions", "practice", "study", "distractor", "test", "questions", "saving"];
+  function attemptTracker(dev) {
+    const KEY = dev ? "wm_try_dev" : "wm_try";
+    let prior = { n: 0, stage: "" }, readable = true;
+    try {
+      const j = JSON.parse(localStorage.getItem(KEY) || "null");
+      if (j && Number.isInteger(j.n) && j.n >= 0) prior = { n: j.n, stage: STAGE_RANK.includes(j.stage) ? j.stage : "" };
+    } catch (e) { readable = false; }
+    const cur = { n: prior.n, stage: prior.stage };
+    let began = false;
+    const save = () => { try { localStorage.setItem(KEY, JSON.stringify(cur)); } catch (e) { /* the count is optional */ } };
+    return {
+      begin() { began = true; cur.n = prior.n + 1; save(); },
+      mark(stage) { if (began && STAGE_RANK.indexOf(stage) > STAGE_RANK.indexOf(cur.stage)) { cur.stage = stage; save(); } },
+      info() { return { attempt: readable ? prior.n + 1 : null, priorStage: prior.stage }; },
+    };
+  }
+  return { attemptTracker, progressLogger, guardUnload, goNoGoList, debriefFor, KINDS, IS_OLD, LEX, esc, median, sha, nextFrame, measureFrames, deviceInfo, makeCode, COND, CI, mulberry32, shuffle, buildPlan, buildPractice, FIELDS: { open: F_OPEN, check: F_CHECK, lang: F_LANG, demo: F_DEMO } };
 })();

@@ -147,7 +147,7 @@ function doPost(e) {
 // ---------- readable tables (derived from the saved JSON; the JSON in Drive stays the master copy) ----------
 var Q_FIELDS = ['aboutOpen', 'oddOpen', 'believable', 'influence', 'firstLanguage', 'firstLanguageOther', 'otherLanguages', 'ageEnglish', 'schoolMedium', 'englishShare', 'englishEase', 'age', 'gender', 'degree', 'priorParticipation'];
 var TRIALS_HEADER = ['code', 'devMode', 'group', 'version', 'keymap', 'trial', 'word', 'kind', 'kindLabel', 'condition', 'conditionLabel', 'cueValence', 'cueCount', 'studied', 'respOld', 'correct', 'rt_ms', 'input', 'hidden'];
-var PARTICIPANTS_BASE = ['code', 'savedISO', 'devMode', 'group', 'version', 'keymap', 'engine', 'durationMin', 'device', 'os', 'browser', 'screen', 'frameMs', 'timeZone', 'dataSharing', 'consentISO',
+var PARTICIPANTS_BASE = ['code', 'savedISO', 'devMode', 'group', 'version', 'keymap', 'engine', 'durationMin', 'device', 'os', 'browser', 'screen', 'frameMs', 'timeZone', 'dataSharing', 'consentISO', 'attempt', 'priorStage',
   'catchCorrect', 'catchTotal', 'distractorHits', 'distractorMisses', 'distractorFalseAlarms', 'distractorCorrectRej', 'hitRate', 'lureOldRate', 'foilOldRate', 'nTrials', 'hiddenTrials'];
 var PARTICIPANTS_HEADER = PARTICIPANTS_BASE.concat(Q_FIELDS);
 var KIND_ = { oldP: 'studied made-up word', oldW: 'studied real word', lure: 'real look-alike of a studied made-up word (never shown)', foilW: 'new unrelated real word', foilP: 'new made-up word' };
@@ -173,9 +173,9 @@ function trialRows_(d) {
 }
 
 function participantRow_(d, savedISO) {
-  var a = d.assignment || {}, dv = d.device || {}, c = d.consent || {}, ds = d.distractor || {}, at = d.attention || {}, q = d.questionnaire || {}, tm = d.timing || {}, tr = d.trials || [];
+  var a = d.assignment || {}, dv = d.device || {}, c = d.consent || {}, ds = d.distractor || {}, at = d.attention || {}, q = d.questionnaire || {}, tm = d.timing || {}, tr = d.trials || [], se = d.session || {};
   var base = [d.participantCode, savedISO, d.devMode === true, a.group || 'cue', a.version, a.keymap, d.engine || '', tm.durationMs ? Math.round(tm.durationMs / 6000) / 10 : '',
-    dv.coarsePointer ? 'touch' : 'keyboard/mouse', dv.os || '', dv.browser || '', (dv.width || '') + 'x' + (dv.height || ''), dv.frameMs === undefined ? '' : dv.frameMs, dv.tz || '', c.dataSharing === true, c.ts || '',
+    dv.coarsePointer ? 'touch' : 'keyboard/mouse', dv.os || '', dv.browser || '', (dv.width || '') + 'x' + (dv.height || ''), dv.frameMs === undefined ? '' : dv.frameMs, dv.tz || '', c.dataSharing === true, c.ts || '', (se.attempt === null || se.attempt === undefined) ? '' : se.attempt, se.priorStage || '',
     at.catchCorrect, at.catchTotal, ds.hits, ds.misses, ds.falseAlarms, ds.correctRejections,
     rate_(tr, function (t) { return t.isOld; }), rate_(tr, function (t) { return t.status === 'lure'; }), rate_(tr, function (t) { return t.status === 'foilW' || t.status === 'foilP'; }),
     tr.length, tr.filter(function (t) { return t.hidden; }).length];
@@ -198,8 +198,9 @@ function rebuildTables() {
   var lock = LockService.getScriptLock();
   lock.waitLock(30000);
   try {
-    var t = tables_(), items = [], files = folder_().getFiles();
-    [t.trials, t.participants].forEach(function (sh) { var n = sh.getLastRow(); if (n > 1) sh.getRange(2, 1, n - 1, sh.getLastColumn()).clearContent(); });
+    var ss = SpreadsheetApp.getActive(), items = [], files = folder_().getFiles();
+    ['trials', 'participants'].forEach(function (n) { var old = ss.getSheetByName(n); if (old) ss.deleteSheet(old); });   // derived tabs: recreated so a changed column list never misaligns
+    var t = tables_();
     while (files.hasNext()) {
       var f = files.next(), d;
       if (!/\.json$/.test(f.getName())) continue;
@@ -242,6 +243,7 @@ var CODEBOOK = [
   ['participants', 'engine, durationMin', 'Software version and minutes from consent to saving.'],
   ['participants', 'device, os, browser, screen, frameMs, timeZone', 'touch or keyboard/mouse; operating system; browser; window size in pixels; screen refresh interval in ms; time zone.'],
   ['participants', 'dataSharing, consentISO', 'TRUE = ticked the optional box allowing anonymous data in a public database; time consent was given.'],
+  ['participants', 'attempt, priorStage', 'attempt = 1 for a first try; 2 or more = the person had begun the study before in this browser and started again (a quit, closed tab or crash is not saved, so only the finished attempt is here). priorStage = how far the furthest earlier attempt got (consent, instructions, practice, study, distractor, test, questions, saving); blank for a first try. Blank attempt = the browser could not tell. A restart whose priorStage is test or later has seen test words before: treat as contaminated.'],
   ['participants', 'catchCorrect, catchTotal', 'Attention questions answered fully correctly, out of 3.'],
   ['participants', 'distractorHits, Misses, FalseAlarms, CorrectRej', 'Shape task: taps on circles, missed circles, taps on squares, squares correctly ignored (60 shapes).'],
   ['participants', 'hitRate', 'Share of studied words answered OLD.'],

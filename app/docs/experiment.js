@@ -273,8 +273,10 @@
     });
 
     const asg = await assign();
-    log = WM.progressLogger(BACKEND || CFG.endpoints.save, asg, DEV);
-    log("consent");
+    const tries = WM.attemptTracker(DEV);
+    const sendLog = WM.progressLogger(BACKEND || CFG.endpoints.save, asg, DEV);
+    log = Object.assign((s, n) => { tries.mark(s); sendLog(s, n); }, { closed: sendLog.closed });
+    tries.begin(); log("consent");
     window.addEventListener("pagehide", () => { if (!S.finished && !S.quit && log.closed) log.closed(); });
     const seed = BOT && Q.has("seed") ? Number(Q.get("seed")) : crypto.getRandomValues(new Uint32Array(1))[0];
     const control = asg.group === "control";
@@ -324,7 +326,7 @@
     const payload = {
       schema: CFG.schema, appVersion: CFG.appVersion, devMode: DEV, bot: BOT, participantCode: code, ticket: asg.ticket,
       assignment: { group: asg.group, version: asg.version, keymap: asg.keymap, source: asg.source, seed, orderTries: plan.orderTries },
-      consent, device: deviceInfo(frameMs),
+      consent, session: tries.info(), device: deviceInfo(frameMs),
       timing: { startISO, endISO: new Date().toISOString(), durationMs: Math.round(performance.now() - t00) },
       design: { cueHighValues: CFG.cueHighValues, cueLowValues: CFG.cueLowValues, crowdN: CFG.crowdN, studyMs: CFG.studyMs, distractorMs: CFG.distractorMs, stimuliSeed: stim.seed, stimuliSource: stim.source },
       study: { order: plan.studyOrder, kinds: plan.studyKinds, log: studyLog }, distractor: distr, practice, trials, catches,
@@ -337,7 +339,7 @@
     S.finished = true; log(how === "saved" ? "complete" : "downloaded");
     if (how === "saved" && !DEV) { try { localStorage.setItem("wm_done", "1"); } catch (e) { /* ignore */ } }
     setStep("Finished"); $("#quit").hidden = true;
-    render(`<div class="card">${debriefFor(debriefHtml, asg.group, code)}</div>`);
+    render(`<div class="card">${debriefFor(debriefHtml, asg.group, code, payload.trials)}</div>`);
     window.__done = true; window.__result = { code, how, trials: trials.length, catches: catches.length };
   }
 
