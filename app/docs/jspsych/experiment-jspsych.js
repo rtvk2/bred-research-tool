@@ -1,6 +1,6 @@
 // jsPsych 7.3.4 version of the same experiment (standard library, standard plugins).
 // Same stimuli.json, same counterbalancing and questionnaires (../shared.js), same data schema as the custom app,
-// so server.py / Apps Script / tools/summarise.py work unchanged. Flags: ?dev=1  ?fast=1  ?bot=1 (as in the custom app).
+// so server.py / Apps Script / tools/summarise.py work unchanged. Flags: ?dev=1  ?fast=1  ?bot=1  ?touch=1 (test mode: act as a phone) (as in the custom app).
 (async () => {
   "use strict";
   const CFG = window.CFG, T = CFG.text, WM = window.WM;
@@ -14,6 +14,12 @@
   const stage = $("#stage");
   stage.tabIndex = -1;
   const S = { quit: false, finished: false, vis: [], t0: 0 };
+  // phone or tablet (coarse pointer): tap buttons instead of the F / J keys. ?touch=1 forces it in test mode.
+  const TOUCH = (DEV && Q.has("touch")) || matchMedia("(pointer:coarse)").matches;
+  // keep the screen on: a phone would otherwise dim during the 2 minute word list
+  let wake = null;
+  const keepAwake = async () => { try { if ("wakeLock" in navigator && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch (e) { /* not supported or refused: ignore */ } };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !S.finished && !S.quit) keepAwake(); });
   let log = () => {};                // anonymous stage-only progress log, set up after the group/version are known
   const STAGE = { "Instructions": "instructions", "Practice": "practice", "Part 1 of 2": "study", "Shape task": "distractor", "Part 2 of 2": "test", "A few questions": "questions" };
   const step = (t) => { $("#stepinfo").textContent = t; if (STAGE[t]) log(STAGE[t]); };
@@ -27,7 +33,6 @@
   if (!DEV) {
     let done = false; try { done = localStorage.getItem("wm_done") === "1"; } catch (e) { /* ignore */ }
     if (done) { stage.innerHTML = card(T.alreadyDone); return; }
-    if (matchMedia("(pointer:coarse)").matches || innerWidth < 700) { stage.innerHTML = card(`<h2>Please use a computer</h2><p>This version of the study needs a laptop or desktop computer with a keyboard. Please open this page again on one.</p>`); return; }
     if (CFG.requireRealConsent && (consentHtml.includes(PLACEHOLDER) || debriefHtml.includes(PLACEHOLDER))) { stage.innerHTML = card(T.noConsentText); return; }
   }
   document.addEventListener("visibilitychange", () => S.vis.push({ t: Math.round(performance.now()), s: document.visibilityState }));
@@ -60,7 +65,8 @@
 
   // ---------- trial builders ----------
   const K = jsPsychHtmlKeyboardResponse, B = jsPsychHtmlButtonResponse, F = jsPsychSurveyHtmlForm, C = jsPsychCallFunction;
-  const info = (html, label = "Continue") => ({ type: B, stimulus: card(html), choices: [label], data: { task: "info" } });
+  // wait = ms the button stays disabled, so a tap meant for the previous screen cannot skip this one
+  const info = (html, label = "Continue", wait = 0) => ({ type: B, stimulus: card(html), choices: [label], enable_button_after: BOT ? 0 : wait * TS, data: { task: "info" } });
   const setStep = (t) => ({ type: C, func: () => step(t), data: { task: "step" } });
   const studyTrials = (words, ms, task) => words.map((w) => ({
     type: K, stimulus: `<div class="center"><div class="word">${esc(w)}</div><div class="bar"><i style="animation-duration:${ms * TS}ms"></i></div></div>`,
@@ -68,27 +74,35 @@
     on_load: () => { S.t0 = performance.now(); }, on_finish: (d) => { d.shownMs = Math.round(performance.now() - S.t0); },
   }));
   const hint = (resp, label, key) => `<span class="hintbox">${label} <kbd>${key}</kbd></span>`;
+  const labels = asg.keymap === 0 ? ["OLD", "NEW"] : ["NEW", "OLD"];   // left, right: same counterbalancing as the F / J keys
+  const wordCue = (t) => {
+    const cue = t.cueCount == null ? `<div class="cue none">&nbsp;</div>` : `<div class="cue">${t.cueCount} of ${CFG.crowdN} other participants said <b>${t.cueValence}</b></div>`;
+    return `<div class="word">${esc(t.word)}</div>
+      ${cue}`;
+  };
   const trialHtml = (t) => {
     const left = asg.keymap === 0 ? hint("old", "OLD", "F") : hint("new", "NEW", "F"), right = asg.keymap === 0 ? hint("new", "NEW", "J") : hint("old", "OLD", "J");
-    const cue = t.cueCount == null ? `<div class="cue none">&nbsp;</div>` : `<div class="cue">${t.cueCount} of ${CFG.crowdN} other participants said <b>${t.cueValence}</b></div>`;
-    return `<div class="center" data-trial="1"><div class="word">${esc(t.word)}</div>
-      ${cue}
+    return `<div class="center" data-trial="1">${wordCue(t)}
       <div class="answers">${left}${right}</div></div>`;
   };
-  const testTrials = (t, n, task) => [
-    { type: K, stimulus: `<div class="center"><div class="fix">+</div></div>`, choices: "NO_KEYS", trial_duration: CFG.fixationMs * TS, data: { task: "fix" } },
-    { type: K, stimulus: trialHtml(t), choices: ["f", "j"], post_trial_gap: CFG.itiMs * TS,
-      data: { task, trial: n, itemId: t.itemId, status: t.status, isOld: t.isOld, lexical: t.lexical, word: t.word, condition: t.cond, cueCount: t.cueCount, cueValence: t.cueValence, sim: t.sim },
-      on_start: (tr) => { tr.data.v0 = S.vis.length; tr.data.hiddenAtOnset = document.visibilityState === "hidden"; },
-      on_load: () => { stage.focus({ preventScroll: true }); },   // jsPsych listens for keys on the display element, so it must have focus
-      on_finish: (d) => {
-        const k = (d.response || "").toLowerCase();
-        d.resp = k === keyOld ? "old" : "new"; d.correct = d.resp === (d.isOld ? "old" : "new");
-        d.hidden = d.hiddenAtOnset || S.vis.length > d.v0;
-        if (d.task === "test" && (d.trial === 1 || d.trial % 10 === 0)) log("test", d.trial);
-        if (BOT) d.rt = Math.round(600 + Math.random() * 900);
-      } },
-  ];
+  const touchHtml = (t) => `<div class="center short" data-trial="1">${wordCue(t)}</div>`;   // the standard button plugin adds the two answer buttons below
+  const testTrials = (t, n, task) => {
+    const meta = { task, trial: n, itemId: t.itemId, status: t.status, isOld: t.isOld, lexical: t.lexical, word: t.word, condition: t.cond, cueCount: t.cueCount, cueValence: t.cueValence, sim: t.sim };
+    const start = (tr) => { tr.data.v0 = S.vis.length; tr.data.hiddenAtOnset = document.visibilityState === "hidden"; };
+    const finish = (d, resp, input) => {
+      d.resp = resp; d.input = input; d.correct = d.resp === (d.isOld ? "old" : "new");
+      d.hidden = d.hiddenAtOnset || S.vis.length > d.v0;
+      if (d.task === "test" && (d.trial === 1 || d.trial % 10 === 0)) log("test", d.trial);
+      if (BOT) d.rt = Math.round(600 + Math.random() * 900);
+    };
+    const answer = TOUCH
+      ? { type: B, stimulus: touchHtml(t), choices: labels, button_html: '<button class="jspsych-btn answerbtn">%choice%</button>', margin_horizontal: "6px", post_trial_gap: CFG.itiMs * TS,
+          data: meta, on_start: start, on_finish: (d) => finish(d, labels[d.response].toLowerCase(), "touch") }
+      : { type: K, stimulus: trialHtml(t), choices: ["f", "j"], post_trial_gap: CFG.itiMs * TS, data: meta, on_start: start,
+          on_load: () => { stage.focus({ preventScroll: true }); },   // jsPsych listens for keys on the display element, so it must have focus
+          on_finish: (d) => finish(d, (d.response || "").toLowerCase() === keyOld ? "old" : "new", "key") };
+    return [{ type: K, stimulus: `<div class="center"><div class="fix">+</div></div>`, choices: "NO_KEYS", trial_duration: CFG.fixationMs * TS, data: { task: "fix" } }, answer];
+  };
   const catchTrials = (t, after) => [
     { type: B, stimulus: card(`<h2>Quick check</h2><p>For the <strong>last word</strong>, what did the other participants say?</p>`), choices: ["OLD", "NEW"],
       data: { task: "catch1", afterTrial: after, word: t.word, shownValence: t.cueValence, shownCount: t.cueCount },
@@ -116,11 +130,13 @@
   });
 
   // distractor: one go (circle) or no-go (square) shape per second
-  const distractorTrials = (seqSeed) => WM.goNoGoList(WM.mulberry32(seqSeed ^ 0x51ed270b), Math.round(CFG.distractorMs / CFG.distractorTrialMs), CFG.goShare).map((kind) => ({
-    type: K, stimulus: `<div class="center"><div class="shape ${kind === "go" ? "circle" : "square"}"></div></div>`,
-    stimulus_duration: CFG.distractorShowMs * TS, trial_duration: CFG.distractorTrialMs * TS, choices: [" "], response_ends_trial: false,
-    on_load: () => { stage.focus({ preventScroll: true }); }, data: { task: "distractor", go: kind === "go" },
-  }));
+  const distractorTrials = (seqSeed) => WM.goNoGoList(WM.mulberry32(seqSeed ^ 0x51ed270b), Math.round(CFG.distractorMs / CFG.distractorTrialMs), CFG.goShare).map((kind) => {
+    const shape = `<div class="shape ${kind === "go" ? "circle" : "square"}"></div>`;
+    const timing = { stimulus_duration: CFG.distractorShowMs * TS, trial_duration: CFG.distractorTrialMs * TS, response_ends_trial: false, data: { task: "distractor", go: kind === "go" } };
+    return TOUCH
+      ? { type: B, stimulus: `<div class="center short">${shape}</div>`, choices: ["TAP"], button_html: '<button class="jspsych-btn tapbtn">%choice%</button>', ...timing }   // tap button stays on screen while the shape comes and goes
+      : { type: K, stimulus: `<div class="center">${shape}</div>`, choices: [" "], on_load: () => { stage.focus({ preventScroll: true }); }, ...timing };
+  });
   const distractorSummary = (rows) => {
     const r = { n: rows.length, hits: 0, misses: 0, falseAlarms: 0, correctRejections: 0 }, rts = [];
     rows.forEach((d) => { const pressed = d.response !== null && d.response !== undefined; if (d.go) { if (pressed) { r.hits++; rts.push(d.rt); } else r.misses++; } else if (pressed) r.falseAlarms++; else r.correctRejections++; });
@@ -132,7 +148,7 @@
   function buildPayload() {
     const get = (task) => jsPsych.data.get().filter({ task }).values();
     const rec = (d) => ({ trial: d.trial, itemId: d.itemId, status: d.status, isOld: d.isOld, lexical: d.lexical, word: d.word, condition: d.condition, cueCount: d.cueCount, cueValence: d.cueValence,
-      sim: d.sim, response: d.resp, correct: d.correct, rt: Math.round(d.rt), input: "key", hidden: d.hidden });
+      sim: d.sim, response: d.resp, correct: d.correct, rt: Math.round(d.rt), input: d.input || "key", hidden: d.hidden });
     const c1 = get("catch1"), c2 = get("catch2");
     const catches = c2.map((d, i) => ({ afterTrial: d.afterTrial, word: c1[i].word, shownValence: d.shownValence, shownCount: d.shownCount, gotValence: d.gotValence, gotCount: d.gotCount, correct: d.correct }));
     const q = {}; get("form").forEach((d) => Object.assign(q, d.response));
@@ -167,15 +183,15 @@
   const consentTrial = {
     type: F, html: `${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" name="agree" required><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label>`,
     button_label: "Start", data: { task: "consent" },
-    on_finish: (d) => { consent = { agreed: d.response.agree === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); },
+    on_finish: (d) => { consent = { agreed: d.response.agree === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); keepAwake(); },
   };
   const timeline = [setStep("Consent"), consentTrial, setStep("Instructions")];
-  timeline.push(info(T.intro), ...(control ? [] : [info(T.cueExplain)]), setStep("Practice"), info(T.practiceIntro), info(T.practiceStudyGo, "Start"));
-  timeline.push(...studyTrials(prac.study, CFG.practiceStudyMs, "practice_study"), info(T.practiceTestGo, "Start"));
+  timeline.push(...(TOUCH ? [info(T.phoneNote)] : []), info(T.intro), ...(control ? [] : [info(T.cueExplain)]), setStep("Practice"), info(T.practiceIntro), info(T.practiceStudyGo, "Start"));
+  timeline.push(...studyTrials(prac.study, CFG.practiceStudyMs, "practice_study"), info(TOUCH ? T.practiceTestGoTouch : T.practiceTestGo, "Start"));
   prac.order.forEach((t, i) => timeline.push(...testTrials(t, i + 1, "practice")));
   timeline.push(setStep("Part 1 of 2"), info(T.realStudyGo, "Start the list"), ...studyTrials(plan.studyOrder, CFG.studyMs, "study"));
-  timeline.push(setStep("Shape task"), info(T.distractorGo, "Start"), ...distractorTrials(seed));
-  timeline.push(setStep("Part 2 of 2"), info(control ? T.realTestGoControl : T.realTestGo, "Start"));
+  timeline.push(setStep("Shape task"), info(TOUCH ? T.distractorGoTouch : T.distractorGo, "Start"), ...distractorTrials(seed));
+  timeline.push(setStep("Part 2 of 2"), info(control ? T.realTestGoControl : T.realTestGo, "Start", 1000));
   plan.order.forEach((t, i) => {
     timeline.push(...testTrials(t, i + 1, "test"));
     if (plan.catches.includes(i + 1)) timeline.push(...catchTrials(t, i + 1));
@@ -241,7 +257,9 @@
         if (d.task === "catch1") pick = btns.find((b) => b.textContent === (Math.random() < 0.9 ? d.shownValence : d.shownValence === "OLD" ? "NEW" : "OLD"));
         if (d.task === "catch2") pick = btns.find((b) => b.textContent === String(Math.random() < 0.9 ? d.shownCount : 5));
         if (d.task === "savefail") pick = btns[1];
-        setTimeout(() => (pick || btns[0]).click(), 5);
+        if (d.task === "test" || d.task === "practice") pick = btns.find((b) => b.textContent.toLowerCase() === botResp(d));
+        if (d.task === "distractor" && !(d.go && Math.random() < 0.85)) return;
+        setTimeout(() => { const b = pick || btns[0]; if (b.isConnected) b.click(); }, 5);   // never click a button from a screen that has already ended
       } else if ((d.task === "test" || d.task === "practice") && document.querySelector("[data-trial]")) {
         last = node;
         const key = botResp(d) === "old" ? keyOld : keyOld === "f" ? "j" : "f";

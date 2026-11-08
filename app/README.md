@@ -9,7 +9,8 @@ Same stimuli, same counterbalancing code (`docs/shared.js`), same questionnaires
 |---|---|---|
 | Built on | jsPsych 7.3.4 and its standard plugins (pinned copy in `docs/jspsych/lib/`, no CDN) | Plain JS written for this study |
 | Why pick it | Published, widely used toolkit; timing and RT come from the standard plugin; easiest to defend to a prof who likes standardisation | Also lets people answer by clicking; fewer moving parts |
-| Answers | Keyboard F / J only | F / J or buttons |
+| Answers | F / J on a computer, tap OLD / NEW buttons on a phone | F / J, mouse or touch buttons |
+| Phones | Allowed (the screen is kept on; a tap button for the shape task) | Allowed |
 
 Link to give participants: `https://<user>.github.io/<repo>/jspsych/` (standard) or `https://<user>.github.io/<repo>/` (custom).
 
