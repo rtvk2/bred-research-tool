@@ -181,9 +181,9 @@
   // ---------- timeline ----------
   const warn = DEV ? `<div class="warn">Test mode: data are marked as dev and are not real data.</div>` : "";
   const consentTrial = {
-    type: F, html: `${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" name="agree" required><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label>`,
+    type: F, html: `${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" name="agree" required><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label><label class="agree"><input type="checkbox" name="share"><span>${T.shareLabel}</span></label>`,
     button_label: "Start", data: { task: "consent" },
-    on_finish: (d) => { consent = { agreed: d.response.agree === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); keepAwake(); },
+    on_finish: (d) => { consent = { agreed: d.response.agree === "on", dataSharing: d.response.share === "on", ts: new Date().toISOString(), textSha256: consentSha }; log("consent"); keepAwake(); },
   };
   const timeline = [setStep("Consent"), consentTrial, setStep("Instructions")];
   timeline.push(...(TOUCH ? [info(T.phoneNote)] : []), info(T.intro), ...(control ? [] : [info(T.cueExplain)]), setStep("Practice"), info(T.practiceIntro), info(T.practiceStudyGo, "Start"));

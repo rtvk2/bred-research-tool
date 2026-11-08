@@ -263,10 +263,10 @@
     setStep("Consent");
     const warn = DEV ? `<div class="warn">Test mode: data are marked as dev and are not real data.</div>` : "";
     const consent = await new Promise((res) => {
-      render(`<div class="card">${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" id="agree"><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label><div class="actions"><button class="primary" data-next disabled>Start</button></div></div>`);
+      render(`<div class="card">${warn}<div class="scroll">${consentHtml}</div><label class="agree"><input type="checkbox" id="agree"><span>I have read the information above, I am 18 or older, and I agree to take part.</span></label><label class="agree"><input type="checkbox" id="share"><span>${T.shareLabel}</span></label><div class="actions"><button class="primary" data-next disabled>Start</button></div></div>`);
       const cb = $("#agree"), nb = $("[data-next]");
       cb.addEventListener("change", () => { nb.disabled = !cb.checked; });
-      nb.addEventListener("click", async () => res({ agreed: true, ts: new Date().toISOString(), textSha256: await sha(consentHtml) }));
+      nb.addEventListener("click", async () => res({ agreed: true, dataSharing: $("#share").checked, ts: new Date().toISOString(), textSha256: await sha(consentHtml) }));
     });
 
     const asg = await assign();

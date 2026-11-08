@@ -62,6 +62,7 @@ window.CFG = {
     distractorGoTouch: `<h2>A one-minute shape task</h2><p>Shapes will appear one at a time. <strong>Tap</strong> when you see a <strong>circle</strong>. Do <strong>not</strong> tap for a square.</p>`,
     realTestGo: `<h2>Part 2: OLD or NEW?</h2><p>Now decide for each word: did it appear in the list you just studied (<strong>OLD</strong>) or not (<strong>NEW</strong>)? Under most words you will see what other participants said.</p><p>Now and then a short question about those answers will appear.</p>`,
     realTestGoControl: `<h2>Part 2: OLD or NEW?</h2><p>Now decide for each word: did it appear in the list you just studied (<strong>OLD</strong>) or not (<strong>NEW</strong>)? Answer as accurately and as quickly as you can.</p>`,
+    shareLabel: "Optional: my anonymous answers may also be uploaded to a public research database so that other researchers can use them. Leave this unticked if you prefer not to.",
     quitConfirm: "Quit the study? Nothing you have done so far will be saved.",
     quitDone: `<h2>You have left the study</h2><p>No data were saved. You can close this tab.</p>`,
     alreadyDone: `<h2>Thank you</h2><p>This browser has already completed the study, so it cannot be done twice.</p>`,

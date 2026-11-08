@@ -46,8 +46,8 @@ git push -u origin main
 4. Open `https://<user>.github.io/<repo>/jspsych/?dev=1&bot=1` and check that a `dev_*.json` file reaches the Drive folder.
 Real data never go into the repo (`data/` is git-ignored). Do not change files during data collection (Pages caches for a few minutes).
 
-## Before real participants (the app refuses to run until you do the first two)
-1. `docs/content/consent.html` is drafted from your submitted consent form and updated to the final procedure. Resolve its 3 yellow `[CONFIRM]` notes (compensation, open data sharing), then delete the marker comment on its first line.
+## Before real participants
+1. `docs/content/consent.html` is drafted from your submitted consent form and updated to the final procedure (no compensation line; an optional box under it asks whether the anonymous data may go to a public database). Read it once. If you ever need to block real participants again, put `<!-- PLACEHOLDER-NOT-FOR-PARTICIPANTS -->` on its first line.
 2. `docs/content/debrief.html` is written (keep `{{CODE}}`); read it once and edit anything that does not fit.
 3. Stimuli: already built from the paper (`tools/pairs.csv` lists the 15 lure pairs; rebuild with `python tools/build_stimuli.py`, no internet needed). Read the printed list.
 4. Run the automated checks (Chrome and `pip install websocket-client`): `python tools/selftest.py`, `python tools/selftest.py --engine jspsych`, and with `--mock` for the GitHub-Pages path. Each plays 8 bot sessions (7 cue-version, 1 optional control) through headless Chrome and checks the saved data against the design (60 trials, five word kinds, balanced cells, rotation across 5 versions).
