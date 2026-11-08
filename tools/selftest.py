@@ -108,6 +108,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--shots", action="store_true")
     ap.add_argument("--engine", choices=["custom", "jspsych"], default="custom", help="which page to run the bots through")
+    ap.add_argument("--touch", action="store_true", help="run the bots as a phone (tap buttons instead of F / J keys)")
     ap.add_argument("--mock", action="store_true", help="test the GitHub Pages path: page on one origin, Apps-Script-like backend on another")
     a = ap.parse_args()
     data = tempfile.mkdtemp(prefix="wm_data_")
@@ -122,6 +123,8 @@ def main():
         data = tempfile.mkdtemp(prefix="wm_mock_")
         mock = subprocess.Popen([sys.executable, str(APP / "tools" / "mock_apps_script.py"), "--port", "8777", "--data", data], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         qs = "&backend=http://127.0.0.1:8777/exec"
+    if a.touch:
+        qs += "&touch=1"
     try:
         for _ in range(40):
             try:

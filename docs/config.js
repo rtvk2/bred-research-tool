@@ -42,7 +42,7 @@ window.CFG = {
     studyTitle: "Word memory study",
     intro: `
       <h2>Before you start</h2>
-      <p>This takes about 15 minutes. Please use a laptop or desktop computer in a quiet place, keep this tab in front, and do not use the back button.</p>
+      <p>This takes about 15 minutes. Please use a quiet place, keep this page in front, and do not use the back button.</p>
       <p><strong>Part 1.</strong> You will see a list of words, one at a time, each for 5 seconds (about 2 minutes). Some may look unusual. Try to remember them exactly as they appear.</p>
       <p>Then comes a one-minute shape task.</p>
       <p><strong>Part 2.</strong> You will then see words one at a time. For each word, decide whether it was <strong>OLD</strong> (it appeared in the list you studied) or <strong>NEW</strong> (it did not).</p>`,
@@ -55,8 +55,11 @@ window.CFG = {
       <p>First, a short practice with different words, so you know how the screens work.</p>`,
     practiceStudyGo: `<h2>Practice: learn these words</h2><p>Three words will appear, a few seconds each. Remember them.</p>`,
     practiceTestGo: `<h2>Practice: OLD or NEW?</h2><p>Four words will appear. Press <strong>F</strong> or <strong>J</strong>, or click a button.</p>`,
+    practiceTestGoTouch: `<h2>Practice: OLD or NEW?</h2><p>Four words will appear. Tap <strong>OLD</strong> or <strong>NEW</strong> on the screen.</p>`,
+    phoneNote: `<h2>Using a phone</h2><p>You can do this study on your phone. You will answer by tapping buttons on the screen. Please hold the phone upright, switch on silent or Do Not Disturb, keep this page in front, and do not switch to another app until the end.</p>`,
     realStudyGo: `<h2>Part 1: learn the words</h2><p>A list of words will appear, <strong>5 seconds each</strong>, one after another (about 2 minutes). Remember as many as you can, exactly as they appear.</p><p>The list starts as soon as you click.</p>`,
     distractorGo: `<h2>A one-minute shape task</h2><p>Shapes will appear one at a time. Press the <strong>space bar</strong> (or tap the screen) when you see a <strong>circle</strong>. Do <strong>not</strong> press for a square.</p>`,
+    distractorGoTouch: `<h2>A one-minute shape task</h2><p>Shapes will appear one at a time. <strong>Tap</strong> when you see a <strong>circle</strong>. Do <strong>not</strong> tap for a square.</p>`,
     realTestGo: `<h2>Part 2: OLD or NEW?</h2><p>Now decide for each word: did it appear in the list you just studied (<strong>OLD</strong>) or not (<strong>NEW</strong>)? Under most words you will see what other participants said.</p><p>Now and then a short question about those answers will appear.</p>`,
     realTestGoControl: `<h2>Part 2: OLD or NEW?</h2><p>Now decide for each word: did it appear in the list you just studied (<strong>OLD</strong>) or not (<strong>NEW</strong>)? Answer as accurately and as quickly as you can.</p>`,
     quitConfirm: "Quit the study? Nothing you have done so far will be saved.",

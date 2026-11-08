@@ -36,6 +36,7 @@ for p in sorted(Path(a.data).glob("*.json")):
                   "catch_correct": d["attention"]["catchCorrect"], "catch_total": d["attention"]["catchTotal"],
                   "distractor_acc": round((dist.get("hits", 0) + dist.get("correctRejections", 0)) / dist["n"], 3) if dist.get("n") else None,
                   "duration_min": round(d["timing"]["durationMs"] / 60000, 1), "frame_ms": d["device"].get("frameMs"),
+                  "device": "touch" if d["device"].get("coarsePointer") else "keyboard/mouse",
                   "believable": q.get("believable"), "influence": q.get("influence"), "first_language": q.get("firstLanguage"),
                   "prior": q.get("priorParticipation"), "english_ease": q.get("englishEase"), "age_english": q.get("ageEnglish"),
                   "english_share": q.get("englishShare")})
@@ -82,6 +83,7 @@ pt["flag_hits_not_above_fa"] = pt.hit_rate <= pt.fa_rate_new
 pt["flag_prior"] = pt.prior == "Yes"
 pt["flag_hidden"] = pt.hidden_trials > 0.1 * N_TEST            # tab hidden on more than 10% of test trials
 flags = ["flag_incomplete", "flag_attention", "flag_hits_not_above_fa", "flag_prior", "flag_hidden"]
+print("devices:", pt.device.value_counts().to_dict(), "| how answers were given:", tr.input.value_counts().to_dict(), "(phones and computers differ in timing; use device as a covariate in a sensitivity check)")
 pt["excluded"] = pt[flags].any(axis=1)
 tr = tr.merge(pt[["pid", "excluded"]], on="pid")
 

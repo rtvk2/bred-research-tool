@@ -16,6 +16,12 @@
   let log = () => {};                // anonymous stage-only progress log, set up after the group/version are known
   const $ = (s, r = document) => r.querySelector(s);
   const stage = $("#stage");
+  // phone or tablet (coarse pointer): tap wording, no F/J hints. ?touch=1 forces it in test mode.
+  const TOUCH = (DEV && Q.has("touch")) || matchMedia("(pointer:coarse)").matches;
+  // keep the screen on: a phone would otherwise dim during the 2 minute word list
+  let wake = null;
+  const keepAwake = async () => { try { if ("wakeLock" in navigator && !wake) { wake = await navigator.wakeLock.request("screen"); wake.addEventListener("release", () => { wake = null; }); } } catch (e) { /* not supported or refused: ignore */ } };
+  document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !S.finished && !S.quit) keepAwake(); });
 
   // ---------- utilities ----------
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms * TS));
@@ -121,7 +127,7 @@
     const cue = t.cueCount == null ? `<div class="cue none">&nbsp;</div>` : `<div class="cue">${t.cueCount} of ${CFG.crowdN} other participants said <b>${t.cueValence}</b></div>`;
     return `<div class="center"><div class="word">${esc(t.word)}</div>
       ${cue}
-      <div class="answers"><button data-resp="${left[0]}">${left[1]} <kbd>F</kbd></button><button data-resp="${right[0]}">${right[1]} <kbd>J</kbd></button></div></div>`;
+      <div class="answers"><button data-resp="${left[0]}">${left[1]}${TOUCH ? "" : " <kbd>F</kbd>"}</button><button data-resp="${right[0]}">${right[1]}${TOUCH ? "" : " <kbd>J</kbd>"}</button></div></div>`;
   }
   function botResp(t) {
     const base = { oldP: 1.4, oldW: 1.4, lure: -1.1, foilW: -2.3, foilP: -2.0 }[t.status];
@@ -138,7 +144,11 @@
         const k = e.key.toLowerCase(); if (k === "f" || k === "j") fin(k === keyOld ? "old" : "new", "key");
       };
       document.addEventListener("keydown", onKey);
-      stage.querySelectorAll("[data-resp]").forEach((b) => b.addEventListener("click", () => fin(b.dataset.resp, "click"), { once: true }));
+      // pointerdown, not click: the response is timed when the finger or mouse goes down, and a phone adds no tap delay
+      stage.querySelectorAll("[data-resp]").forEach((b) => {
+        b.addEventListener("pointerdown", (e) => { if (e.pointerType === "mouse" && e.button !== 0) return; e.preventDefault(); fin(b.dataset.resp, e.pointerType === "touch" ? "touch" : "click"); }, { once: true });
+        b.addEventListener("click", () => fin(b.dataset.resp, "click"), { once: true });   // keyboard Enter or Space on a focused button
+      });
       if (BOT) setTimeout(() => fin(botResp(t), "bot"), 5);
     });
   }
@@ -270,15 +280,15 @@
     const frameMs = await measureFrames();
 
     setStep("Instructions"); log("instructions");
-    if (matchMedia("(pointer:coarse)").matches || innerWidth < 700)
-      await info(`<div class="warn">This study works best on a laptop or desktop computer with a keyboard. You can continue on this device, but a computer is better.</div>`);
+    keepAwake();
+    if (TOUCH) await info(T.phoneNote);
     await info(T.intro);
     if (!control) await info(T.cueExplain);
 
     setStep("Practice"); log("practice");
     await info(T.practiceIntro); await info(T.practiceStudyGo, "Start");
     await studyPhase(prac.study, CFG.practiceStudyMs);
-    await info(T.practiceTestGo, "Start");
+    await info(TOUCH ? T.practiceTestGoTouch : T.practiceTestGo, "Start");
     const practice = []; let pn = 0;
     for (const t of prac.order) practice.push(await recogTrial(t, asg.keymap, ++pn));
 
@@ -287,7 +297,7 @@
     const studyLog = await studyPhase(plan.studyOrder, CFG.studyMs);
 
     setStep("Shape task"); log("distractor");
-    await info(T.distractorGo, "Start");
+    await info(TOUCH ? T.distractorGoTouch : T.distractorGo, "Start");
     const distr = await distractor(seed);
 
     setStep("Part 2 of 2"); log("test");
