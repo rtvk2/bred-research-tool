@@ -1,12 +1,15 @@
 // Cue (9 vs 2 of 10) x valence (others say OLD vs NEW) false-recognition task, plus a no-cue control group. No dependencies.
 // Flow: consent -> instructions -> practice -> study 12 pseudowords + 12 real words (5 s each) -> 60 s shape task
 //       -> 60-word recognition test (cue group: with cues) -> questions -> save (only at the very end) -> debrief.
-// URL flags (testing only, data marked devMode): ?dev=1  ?fast=1 (timers x0.02)  ?bot=1 (auto-run, implies dev+fast)
+// URL flags (testing only, data marked devMode, all need ?dev=1414): ?dev=1414  &fast=1 (timers x0.02)  &bot=1 (auto-run, implies fast)
+// Without the code this page sends visitors to the standard version (jspsych/), the one to share.
 (() => {
   "use strict";
   const CFG = window.CFG, T = CFG.text;
   const Q = new URLSearchParams(location.search);
-  const BOT = Q.has("bot"), DEV = BOT || Q.has("dev"), TS = BOT || Q.has("fast") ? 0.02 : 1;
+  const DEV = Q.get("dev") === CFG.devCode;
+  if (!DEV) { location.replace("jspsych/"); return; }
+  const BOT = Q.has("bot"), TS = BOT || Q.has("fast") ? 0.02 : 1;
   // Data backend: "" = the Python server in this repo (same origin); otherwise a Google Apps Script web-app URL (see backend/).
   // ?backend=<url> overrides it in test mode only.
   const BO = DEV ? Q.get("backend") : null;   // test mode only: ?backend=<url> overrides, ?backend=local keeps data on this server

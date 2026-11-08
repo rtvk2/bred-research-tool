@@ -166,7 +166,7 @@ def main():
     DATA.mkdir(parents=True, exist_ok=True)
     for f in ("consent", "debrief"):
         if "PLACEHOLDER-NOT-FOR-PARTICIPANTS" in (PUBLIC / "content" / f"{f}.html").read_text(encoding="utf8"):
-            print(f"WARNING: content/{f}.html is still the placeholder; the app will refuse real participants (use ?dev=1 to test).")
+            print(f"WARNING: content/{f}.html is still the placeholder; the app will refuse real participants (use ?dev=1414 to test).")
     print(f"Serving {PUBLIC} at http://{a.host}:{a.port}/   data -> {DATA}")
     ThreadingHTTPServer((a.host, a.port), Handler).serve_forever()
 
