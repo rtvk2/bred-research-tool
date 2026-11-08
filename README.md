@@ -29,7 +29,7 @@ GitHub Pages only serves files, so something else must receive the data.
 cd app
 python server.py                 # http://127.0.0.1:8000  (custom)   and  /jspsych/  (jsPsych)
 ```
-Test mode, no real data: add `?dev=1`. Because `config.js` now holds the Apps Script address, test sessions are sent there; add `&backend=local` to keep them on this computer (saved as `data/dev_*.json`). `&fast=1` runs timers 50x faster; `?bot=1` auto-plays a whole session; `&v=0..3&k=0|1` force version and key map.
+Test mode, no real data: add `?dev=1414` (the code keeps people from landing in it by mistake; without it the root page sends visitors to `jspsych/`). Because `config.js` now holds the Apps Script address, test sessions are sent there; add `&backend=local` to keep them on this computer (saved as `data/dev_*.json`). `&fast=1` runs timers 50x faster; `&bot=1` auto-plays a whole session; `&v=0..3&k=0|1` force version and key map.
 
 ## Publish on github.io (route A)
 1. Do the Apps Script setup in `backend/README.md`; paste its `/exec` URL into `docs/config.js` as `backend`.
@@ -43,7 +43,7 @@ git remote add origin https://github.com/<user>/<repo>.git
 git push -u origin main
 ```
 3. Repo Settings > Pages > Build and deployment > Deploy from a branch > `main` and `/docs` > Save. After a minute the site is at `https://<user>.github.io/<repo>/`.
-4. Open `https://<user>.github.io/<repo>/jspsych/?dev=1&bot=1` and check that a `dev_*.json` file reaches the Drive folder.
+4. Open `https://<user>.github.io/<repo>/jspsych/?dev=1414&bot=1` and check that a `dev_*.json` file reaches the Drive folder.
 Real data never go into the repo (`data/` is git-ignored). Do not change files during data collection (Pages caches for a few minutes).
 
 ## Before real participants

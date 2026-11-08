@@ -30,7 +30,8 @@ window.CFG = {
   maxValenceRun: 4,               // no more than 4 cues with the same valence in a row
 
   // ---- safety ----
-  requireRealConsent: true,       // refuse real participants while content/consent.html is a placeholder (use ?dev=1 to test)
+  requireRealConsent: true,       // refuse real participants while content/consent.html is a placeholder (use ?dev=1414 to test)
+  devCode: "1414",               // test mode (?dev=1414) needs this code, so nobody lands in it by mistake
 
   // Where data go. "" = the Python server in this repo (api/assign, api/save, same origin).
   // For GitHub Pages (static, cannot store data) paste the Apps Script web-app URL here (ends in /exec); see backend/README.md.

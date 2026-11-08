@@ -159,7 +159,7 @@ def main():
         cdp = CDP()
         cdp.call("Page.enable")
         for v, k, g in [(0, 0, "cue"), (1, 0, "cue"), (2, 0, "cue"), (3, 0, "cue"), (4, 0, "cue"), (0, 1, "cue"), (3, 1, "cue"), (1, 0, "control")]:
-            cdp.go(f"{BASE}{page}?bot=1&v={v}&k={k}&g={g}&seed={1000 + v * 7 + k}{qs}")
+            cdp.go(f"{BASE}{page}?dev=1414&bot=1&v={v}&k={k}&g={g}&seed={1000 + v * 7 + k}{qs}")
             res = cdp.wait("window.__done ? JSON.stringify(window.__result) : (window.__error || '')")
             print(f"bot v={v} k={k} {g}:", res[:120])
             if "trials" not in res:
@@ -167,7 +167,7 @@ def main():
         # progress log: a Quit and a closed tab must leave only stage entries, never a participant file
         n_before = len(list(Path(data).glob("dev_*.json")))
         for how in ("quit", "close"):
-            cdp.go(f"{BASE}{page}?bot=1&v=1&k=0&seed=555{qs}")
+            cdp.go(f"{BASE}{page}?dev=1414&bot=1&v=1&k=0&seed=555{qs}")
             time.sleep(2.0)
             if how == "quit":
                 cdp.ev("(function(){var q=document.querySelector('#quit'); if (q) q.click();})()")
@@ -177,15 +177,22 @@ def main():
         if len(list(Path(data).glob("dev_*.json"))) != n_before:
             problems.append("a quit or closed session left a participant file")
         if a.mock:  # one run that takes its cell from the backend
-            cdp.go(f"{BASE}{page}?bot=1&seed=77{qs}")
+            cdp.go(f"{BASE}{page}?dev=1414&bot=1&seed=77{qs}")
             res = cdp.wait("window.__done ? JSON.stringify(window.__result) : (window.__error || '')")
             print("bot with backend-assigned cell:", res[:100])
             if "trials" not in res:
                 problems.append("backend-assigned run failed: " + res)
+        # without the code the custom page must hand visitors to the standard version, and the old ?dev=1 must not count
+        cdp.go(f"{BASE}/?dev=1&bot=1")
+        time.sleep(1.5)
+        landed = cdp.ev("location.pathname")
+        print("custom page without the test code lands on:", landed)
+        if not landed.rstrip("/").endswith("/jspsych"):
+            problems.append("custom page did not redirect without the test code: " + landed)
         if a.shots:
             shots = APP / "tools" / "shots"
             shots.mkdir(exist_ok=True)
-            cdp.go(f"{BASE}/?dev=1&v=0&k=0&backend=local")
+            cdp.go(f"{BASE}/?dev=1414&v=0&k=0&backend=local")
             cdp.wait("document.querySelector('#agree') ? 1 : 0")
             cdp.shot(shots / "1_consent.png")
             cdp.ev("document.querySelector('#agree').click(); document.querySelector('[data-next]').click()")

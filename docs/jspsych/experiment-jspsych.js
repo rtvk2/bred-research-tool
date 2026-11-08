@@ -1,11 +1,12 @@
 // jsPsych 7.3.4 version of the same experiment (standard library, standard plugins).
 // Same stimuli.json, same counterbalancing and questionnaires (../shared.js), same data schema as the custom app,
-// so server.py / Apps Script / tools/summarise.py work unchanged. Flags: ?dev=1  ?fast=1  ?bot=1  ?touch=1 (test mode: act as a phone) (as in the custom app).
+// so server.py / Apps Script / tools/summarise.py work unchanged. Test flags all need ?dev=1414: &fast=1  &bot=1  &touch=1 (act as a phone).
 (async () => {
   "use strict";
   const CFG = window.CFG, T = CFG.text, WM = window.WM;
   const Q = new URLSearchParams(location.search);
-  const BOT = Q.has("bot"), DEV = BOT || Q.has("dev"), TS = BOT || Q.has("fast") ? 0.02 : 1;
+  const DEV = Q.get("dev") === CFG.devCode;   // test mode needs the code, so nobody lands in it by mistake
+  const BOT = DEV && Q.has("bot"), TS = DEV && (BOT || Q.has("fast")) ? 0.02 : 1;
   const ROOT = new URL("../", location.href);
   const BO = DEV ? Q.get("backend") : null;   // test mode only: ?backend=<url> overrides, ?backend=local keeps data on this server
   const BACKEND = BO === "local" ? "" : (BO || CFG.backend || "");

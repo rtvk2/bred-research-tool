@@ -9,7 +9,7 @@ GitHub Pages only serves files; it cannot store what participants submit. This 1
 4. Deploy > New deployment > type **Web app**. Execute as: **Me**. Who has access: **Anyone**. Deploy and copy the URL that ends in `/exec`.
    - If "Anyone" is not offered, your institute's Google Workspace blocks public web apps: use a personal Google account for the script instead (and say so in the IRB form), or ask IT.
 5. Paste that URL into `docs/config.js` as `backend: "https://script.google.com/macros/s/.../exec"`.
-6. Test: open your github.io page with `?dev=1&bot=1&backend=<the same URL>` (test mode lets the URL override the backend). After about 10 seconds a `dev_WM-....json` file should be in the Drive folder and a row in the `done` tab.
+6. Test: open your github.io page with `?dev=1414&bot=1&backend=<the same URL>` (test mode lets the URL override the backend). After about 10 seconds a `dev_WM-....json` file should be in the Drive folder and a row in the `done` tab.
 
 After changing `Code.gs` you must make a **new deployment version** (Deploy > Manage deployments > edit > New version), otherwise the old code keeps running.
 
